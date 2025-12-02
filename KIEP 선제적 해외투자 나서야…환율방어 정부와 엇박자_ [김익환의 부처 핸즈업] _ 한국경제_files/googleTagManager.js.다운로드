@@ -1,0 +1,303 @@
+var HKGATracker = HKGATracker || {};
+
+HKGATracker.browserInfo = navigator.userAgent;
+HKGATracker.isAndroidApp = HKGATracker.browserInfo.indexOf('GA_Android') > -1 || HKGATracker.browserInfo.indexOf('HKAPP_A') > -1;
+HKGATracker.isIOSApp = HKGATracker.browserInfo.indexOf('GA_iOS_WK') > -1 || HKGATracker.browserInfo.indexOf('HKAPP_I') > -1;
+HKGATracker.commonData = {};
+HKGATracker.virCommonData = {};
+
+HKGATracker.removeEmptyElement = function (removeValue) {
+  let returnValue = {};
+  for (key in removeValue) {
+    if (removeValue[key] === '' || removeValue[key] === null || removeValue[key] === undefined) {
+      delete removeValue[key];
+    }
+  }
+  returnValue = removeValue;
+
+  return returnValue;
+}
+
+HKGATracker.resetDataLayer = function (targetObject) {
+  let setGTM = {};
+  for (key in targetObject) {
+    setGTM[key] = undefined;
+  }
+
+  return dataLayer.push(setGTM);
+}
+
+HKGATracker.hybrid = function (object, isVirtual) {
+  
+  let GAData = isVirtual ? { ...HKGATracker.virCommonData, ...object } : { ...HKGATracker.commonData, ...object };
+  console.log(GAData);
+  HKGATracker.isAndroidApp ? window.hankyunggascriptAndroid.GAHybrid(JSON.stringify(GAData)) : webkit.messageHandlers.hankyunggascriptCallbackHandler.postMessage(JSON.stringify(GAData));
+}
+
+HKGATracker.sendGAPage = function (object) {
+  try {
+    object = HKGATracker.removeEmptyElement(object);
+    HKGATracker.commonData = { ...object };
+    if (HKGATracker.isAndroidApp || HKGATracker.isIOSApp) {
+      object.type = 'P';
+      HKGATracker.hybrid(object, false);
+    } else {
+      dataLayer = [object];
+      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','GTM-T9TD5G7');
+    }
+  } catch (e) {
+    console.log('sendGAPage 함수 ERROR');
+    console.log(e.message);
+  }
+}
+
+HKGATracker.sendGAVirPage = function (virObject) {
+  try {
+    virObject = HKGATracker.removeEmptyElement(virObject);
+    HKGATracker.virCommonData = { ...virObject };
+    if (HKGATracker.isAndroidApp || HKGATracker.isIOSApp) {
+      virObject.type = 'P';
+      HKGATracker.hybrid(virObject, true);
+    } else {
+      virObject.event = 'ga_virtual';
+      dataLayer.push(virObject);
+      HKGATracker.resetDataLayer(virObject);
+    }
+  } catch (e) {
+    console.log('sendVirPage 함수 ERROR');
+    console.log(e.message);
+  }
+}
+
+HKGATracker.sendGAEvent = function (object, isVirtual) {
+  try {
+    let GAData = HKGATracker.removeEmptyElement(object);
+    if (HKGATracker.isAndroidApp || HKGATracker.isIOSApp) {
+      GAData.type = 'E';
+      HKGATracker.hybrid(GAData, isVirtual);
+    } else {
+      GAData.event = 'ga_event';
+      isVirtual ? (GAData = { ...HKGATracker.virCommonData, ...GAData }) : GAData;
+      dataLayer.push(GAData);
+      HKGATracker.resetDataLayer(GAData);
+    }
+  } catch (e) {
+    console.log('sendGAEvent 함수 ERROR');
+    console.log(e.message);
+  }
+}
+
+HKGATracker.sendGAAttrEvent = function (event, isVirtual) {
+  try {
+    const ELE = event.currentTarget;
+    const ATTR = ELE.getAttributeNames();
+    let GAData = {};
+    for (var i = 0; i < ATTR.length; i++) {
+      if (ATTR[i].includes('hk_')) {
+        GAData[ATTR[i]] = ELE.getAttribute(ATTR[i]);
+      }
+    }
+    GAData['event_name'] = ELE.getAttribute('event_name');
+    if (HKGATracker.isAndroidApp || HKGATracker.isIOSApp) {
+      GAData.type = 'E';
+      HKGATracker.hybrid(GAData, isVirtual);
+    } else {
+      GAData.event = 'ga_event';
+      isVirtual ? (GAData = { ...HKGATracker.virCommonData, ...GAData }) : GAData;
+      dataLayer.push(GAData);
+      HKGATracker.resetDataLayer(GAData);
+    }
+  } catch (e) {
+    console.log('sendGAAttrEvent 함수 ERROR');
+    console.log(e.message);
+  }
+}
+
+var GATrackingData = GATrackingData || {};
+
+HKGATracker.gaDetectDevice = function () {
+  var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+  if (/GA_Android|GA_iOS_WK|HKAPP_A|HKAPP_I/.test(userAgent)) {return "app";}
+  else if (/android|windows phone/i.test(userAgent) || (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream)){return "mo web";}
+  return "pc web";
+}
+
+HKGATracker.setGATrackingData = function (){
+    
+  // 사용자 속성
+  let match = document.cookie.match(new RegExp('_ga' + '=([^;]+)'));
+  if(match){
+      let parts = match[1].split('.');
+      GATrackingData['up_cid'] =  parts[2] + '.' + parts[3];
+  }
+
+  GATrackingData['up_login_yn'] = 'n';
+
+  match = document.cookie.match(new RegExp('UserNo' + '=([^;]+)'));
+  if(match){
+      GATrackingData['up_uid'] = match[1];
+      GATrackingData['up_login_yn'] = 'y';
+
+      match = document.cookie.match(new RegExp('login_type' + '=([^;]+)'));
+      if(match) GATrackingData['up_login_type'] = match[1];
+
+      match = document.cookie.match(new RegExp('UserRegDate' + '=([^;]+)'));
+      if(match) GATrackingData['up_join_date'] = match[1];
+  }
+
+  GATrackingData["up_visit_channel"] = HKGATracker.gaDetectDevice();
+
+
+  // 페이지 데이터
+  if(!GATrackingData.title){
+    GATrackingData.title = document.title;
+  }
+  if(!GATrackingData.title){
+    GATrackingData.title = '한국경제신문';
+  }
+  
+  if(GATrackingData.title && !GATrackingData.hk_page_1depth){
+      const hk_page_depth = GATrackingData.title.split('>');
+      hk_page_depth.forEach((value, index) => {
+          GATrackingData[`hk_page_${index+1}depth`] = value;
+      });
+  }
+
+  GATrackingData["hk_visit_channel"] = HKGATracker.gaDetectDevice();
+  // GATrackingData["hk_page_day"] = ["일", "월", "화", "수", "목", "금", "토"][new Date().getDay()];
+  GATrackingData["hk_page_fullurl"] = document.location.href;
+  GATrackingData["hk_page_noparameterurl"] = document.location.origin + document.location.pathname;
+
+  if(typeof GATrackingData["hk_service_group"] == "undefined" || GATrackingData["hk_service_group"] == ""){
+    // 닷컴
+    if(location.host == "www.hankyung.com"){
+      const services = [
+        "koreamarket","globalmarket","realestate","opinion","economy","financial-market","industry","distribution","tech",
+        "international","politics","society","culture","golf","trend","travel","lawbiz","life-style","price",
+        "bioinsight","choinsight","esg","thepen","legi-explorer","game","semiconinsight"
+      ];
+      const pathSegment = location.pathname.split('/')[1];
+      if (location.pathname === "/") {
+          GATrackingData["hk_service_group"] = "home";
+      } else if (services.includes(pathSegment)) {
+          GATrackingData["hk_service_group"] = pathSegment;
+      }
+    }
+    else if(location.host == "markets.hankyung.com"){
+      GATrackingData["hk_service_group"] = "koreamarket";
+    }
+  }
+}
+
+if(!location.host.includes('-dev') && !location.host.includes('stg-')){
+  HKGATracker.setGATrackingData();
+  HKGATracker.sendGAPage(GATrackingData);
+}
+
+if(typeof jQuery != 'undefined') {
+  const eventObj = {
+      event_name: 'click_event',
+      hk_click_page: '',
+      hk_click_area: '',
+      hk_click_label: ''
+  }
+
+  $(document).on('click', '.hk-header .hk-top__wrap .hk-top__logo a', function(){
+    eventObj.hk_click_page = '섹션 공통';
+    eventObj.hk_click_area = 'GNB';
+    eventObj.hk_click_label = '로고';
+    HKGATracker.sendGAEvent(eventObj, false);
+  });
+
+  $(document).on('click','.hk-header .hk-top__wrap .hk-top__gnb a', function(){
+    eventObj.hk_click_page = '섹션 공통';
+    eventObj.hk_click_area = 'GNB';
+    eventObj.hk_click_label = $.trim($(this).text());
+    HKGATracker.sendGAEvent(eventObj, false);
+  });
+
+  $(document).on('click','.hk-header .hk-top__wrap .hk-top__user > button', function(){
+    eventObj.hk_click_page = '섹션 공통';
+    eventObj.hk_click_area = 'GNB';
+    eventObj.hk_click_label = '로그인';
+    if($(this).hasClass('after-login')){
+      eventObj.hk_click_label = '내정보';
+    }
+    HKGATracker.sendGAEvent(eventObj, false);
+  });
+
+  $(document).on('click','.hk-header .hk-top__wrap .hk-top__user .hk-user__layer a', function(){
+    eventObj.hk_click_page = '공통';
+    eventObj.hk_click_area = 'GNB';
+    if($(this).closest('.my-item').hasClass('my-item-account')){eventObj.hk_click_label = '계정관리';}
+    else if($(this).closest('.my-item').hasClass('my-item-news')){eventObj.hk_click_label = '마이뉴스';}
+    else if($(this).closest('.my-item').hasClass('my-item-stock')){eventObj.hk_click_label = '마이증권';}
+    else if($(this).closest('.my-item').hasClass('my-item-subscribe')){eventObj.hk_click_label = '마이구독';}
+    else{eventObj.hk_click_label = $.trim($(this).text());}
+    
+    HKGATracker.sendGAEvent(eventObj, false);
+  });
+
+  $(document).on('click','.hk-header .hk-top__wrap .hk-top__search > button', function(){
+    eventObj.hk_click_page = '섹션 공통';
+    eventObj.hk_click_area = 'GNB';
+    eventObj.hk_click_label = '검색';
+    HKGATracker.sendGAEvent(eventObj, false);
+  });
+
+  $(document).on('click', '.hk-header .promotion-nav-wrap a', function(){
+    eventObj.hk_click_page = '공통';
+    eventObj.hk_click_area = 'GNB_프로모션';
+    eventObj.hk_click_label = $.trim($(this).text());
+    HKGATracker.sendGAEvent(eventObj, false);
+  });
+
+
+  $(document).on('click', '.hk-header .section__gnb__wrap a', function(){
+    eventObj.hk_click_page = '섹션 공통';
+    eventObj.hk_click_area = 'GNB';
+    eventObj.hk_click_label = $.trim($(this).text());
+    HKGATracker.sendGAEvent(eventObj, false);
+  });
+
+  // 모바일
+  $(document).on('click', '.hk-header .section__gnb__wrap .btn-section__nav', function(){
+    eventObj.hk_click_page = '섹션 공통';
+    eventObj.hk_click_area = 'GNB';
+    eventObj.hk_click_label = $.trim($(this).closest('.section__logo__area').find('a').text());
+
+    if($(this).closest('.section__gnb__wrap').hasClass('active')){
+      eventObj.hk_click_label += '_접기';
+    }else{
+      eventObj.hk_click_label += '_펼치기';
+    }
+
+    HKGATracker.sendGAEvent(eventObj, false);
+  });
+  
+  $(document).on('click','.hk-header .btn-hamburgermenu', function(){
+    eventObj.hk_click_page = '섹션 공통';
+    eventObj.hk_click_area = 'GNB';
+    eventObj.hk_click_label = '메뉴 바로가기';
+    HKGATracker.sendGAEvent(eventObj, false);
+  });
+} 
+
+
+if(location.host == "id.hankyung.com"){
+(function(c,l,a,r,i,t,y){
+c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+})(window, document, "clarity", "script", "nbp6qenqig");
+}else if(!location.href.includes('marketmap')){
+(function(c,l,a,r,i,t,y){
+c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+})(window, document, "clarity", "script", "nbkx0vvwht");
+}

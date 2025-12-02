@@ -1,0 +1,58 @@
+(function(w, d) {
+  try {
+    d = w.top.document || d; w = w.top.document ? w.top : w;
+  } catch (e) {}
+  var ttag = function() {
+    console.log('test1');
+window.top.document.querySelector('#teads_slot').parentElement.style.display = 'block';
+    w.teads.page(27520).placement(26648, {slider: {allow_corner_position: false, allow_top_position: false}, "css":"margin: 20px auto 0px; ","format":"inread","parentWindow":false,"slot":{"insertInside":true,"btf":false,"selector":"#teads_slot","minimum":1}}).passback(function passback() {if(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) { 
+var d = window.document;
+var _tt_slots = d.querySelectorAll("#teads_slot");
+try {
+  d = window.top.document;
+} catch (e) {}
+var adFrame = d.createElement("iframe");
+adFrame.width = 336;
+adFrame.height = 280;
+adFrame.border = 0;
+adFrame.style.border = "0";
+adFrame.frameBorder = 0;
+adFrame.style = "display: block; margin: 12px auto;";
+var content = "<script async src='https://securepubads.g.doubleclick.net/tag/js/gpt.js'></script><div id='gpt-passback'><script>window.googletag = window.googletag || {cmd: []};googletag.cmd.push(function() {googletag.defineSlot('/3448900/m.news_inarticle01', [[300, 250], [512, 288], [250, 250], [336, 280]], 'gpt-passback').addService(googletag.pubads()); googletag.enableServices();googletag.display('gpt-passback');});</script></div>";
+var passbackSlot = _tt_slots[0];
+passbackSlot.parentNode.insertBefore(adFrame,passbackSlot);
+adFrame.contentWindow.document.open("text/html");
+adFrame.contentWindow.document.write(content);
+adFrame.contentWindow.document.close();
+}
+else{
+var d = window.document;
+var _tt_slots = d.querySelectorAll("#teads_slot");
+try {
+  d = window.top.document;
+} catch (e) {}
+var adFrame = d.createElement("iframe");
+adFrame.width = 660;
+adFrame.height = 280;
+adFrame.border = 0;
+adFrame.scrolling="no";
+adFrame.style.border = "0";
+adFrame.frameBorder = 0;
+adFrame.style = "display: block; margin: 12px auto;";
+var content = "<script async src='https://securepubads.g.doubleclick.net/tag/js/gpt.js'></script><div style='display: flex; justify-content: center; text-align: center;'><div id='gpt-passback' style='margin:10px;'><script>window.googletag = window.googletag || {cmd: []};googletag.cmd.push(function() {googletag.defineSlot('/3448900/hdv601_view_inarticle01', [300, 250], 'gpt-passback').addService(googletag.pubads());googletag.enableServices();googletag.display('gpt-passback');});</script></div><div id='gpt-passback2' style='margin:10px;'><script>window.googletag = window.googletag || {cmd: []};googletag.cmd.push(function() {googletag.defineSlot('/3448900/hdvI01_inarticle01R(passback)', [300, 250], 'gpt-passback2').addService(googletag.pubads());googletag.enableServices();googletag.display('gpt-passback2');});</script></div></div>";
+var passbackSlot = _tt_slots[0];
+passbackSlot.parentNode.insertBefore(adFrame,passbackSlot);
+adFrame.contentWindow.document.open("text/html");
+adFrame.contentWindow.document.write(content);
+adFrame.contentWindow.document.close();
+}}).serve();
+  };
+  if (w.teads && w.teads.page) { ttag(); }
+  else if (!w.teadsscript) {
+    var s = document.createElement('script');
+    s.src = 'https://static.teads.tv/static/master/media/format/v3/teads-format.min.js';
+    s.async = true; s.onload = ttag; w.teadsscript = d.getElementsByTagName('head')[0].appendChild(s);
+  } else {
+    w.teadsscript.addEventListener('load', ttag);
+  }
+})(window, document);

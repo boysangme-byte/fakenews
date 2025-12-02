@@ -1,0 +1,13 @@
+// 도메인 선언
+const current_domain = window.location.hostname;
+
+$(document).ready(function(){
+
+	// 개발서버 도메인 치환
+	if( current_domain == 'stg-www.hankyung.com' )
+	{
+		const html_now = document.documentElement.innerHTML;
+		const html_new = html_now.replace(/https:\/\/www.hankyung.com/g, "https://stg-www.hankyung.com");
+		document.documentElement.innerHTML = html_new;
+	}
+});

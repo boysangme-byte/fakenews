@@ -1,0 +1,191 @@
+import {menu_search} from './lib/menu_list.js?v=20251128_1'
+
+let menuIndex = -1;
+
+// 메뉴 검색어 입력
+$(document).ready(() => {
+    const inputEl = document.querySelector(".search-menu .search-input input");
+
+    inputEl.addEventListener("keyup", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const menu_search = inputEl.value;
+
+        // 엔터키 입력
+        if(e.key == "Enter"){
+            goToSelectedUrl();
+            return;
+        }
+
+        // 윈도우 IME 방지
+        if(e.key == "Process" && $.inArray(e.code, ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]) >= 0){
+            return false;
+        }
+
+        if($.inArray(e.key, ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]) < 0){
+            // 검색어가 있는 경우
+            if(menu_search.length > 0){
+                $(".search-menu .btn-inp-reset").show();
+                $(".search-menu .search-input-area").addClass("active");
+
+                menuIndex = -1;
+
+                menu_search_setting(menu_search);
+            }
+            // 검색어가 없는 경우
+            else{
+                resetMenuSearch();
+            }
+        }
+    });
+
+    inputEl.addEventListener("keydown", (e) => {
+        if($.inArray(e.key, ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]) >= 0){
+            e.preventDefault();
+            e.stopPropagation();
+
+            if($.inArray(e.key, ["ArrowUp", "ArrowDown"]) >= 0){
+                // 한글 IME 방지용
+                if(e.isComposing == true){
+                    return false;
+                }
+
+                const menuLength = $(".search-menu .search-auto-layer ul.kwd-list li").length;
+
+                if(menuLength == 0){
+                    return false;
+                }
+
+                // 방향키 위로
+                if(e.key == "ArrowUp"){
+                    if(menuIndex > 0){
+                        menuIndex--;
+                    }else{
+                        menuIndex = menuLength - 1;
+                    }
+                }
+                // 방향키 아래로
+                else if(e.key == "ArrowDown"){
+                    if(menuIndex < menuLength - 1){
+                        menuIndex++;
+                    }else{
+                        menuIndex = 0;
+                    }
+                }
+
+                // 메뉴 선택
+                moveMenuList();
+            }
+        }
+    });
+
+    // 자동완성창 닫기
+    $(".search-menu .btn-close-auto").on("click",  (e) => {
+        $(".search-menu .search-auto-layer").removeClass("active");
+    });
+
+    // 메뉴 검색어 삭제
+    $(".search-menu .btn-inp-reset").on("click", (e) => {
+        resetMenuSearch();
+    });
+
+    // 마우스 다른곳 오버 시 검색어 초기화
+    $('.nav-dropdown__menu').on("mouseleave", (e) => {
+        resetMenuSearch();
+    });
+});
+
+// 메뉴 검색어 세팅
+const menu_search_setting = (keyword) => {
+    const data = menu_search(keyword);
+
+    $(".search-menu .search-auto-layer ul.kwd-list li").remove();
+
+    $.each(data, (idx, val) => {
+        $(".search-menu .search-auto-layer ul.kwd-list").append(`
+            <li>
+                <a href="${val.url}" class="kwd" ${val.is_blank == 'Y' ? 'target="_blank" rel="nofollow"' : ''}>
+                    ${val.show_name}
+                </a>
+            </li>
+        `);
+    });
+
+    $(".search-menu .search-auto-layer").addClass("active");
+}
+
+// 키보드 위/아래 버튼으로 메뉴 이동
+const moveMenuList = () => {
+    if(menuIndex == -1){
+        return;
+    }
+
+    const ul_list = document.querySelector(".search-menu .search-auto-layer ul.kwd-list");
+    const listItem = ul_list.getElementsByTagName("li");
+
+    // 모든 li에서 on 클래스 제거
+    Array.from(listItem).forEach((li) => {
+        const a_tag = li.querySelector("a");
+        if(a_tag){
+            a_tag.classList.remove("on");
+        }
+    });
+
+    const selectedItem = listItem[menuIndex];
+    selectedItem.querySelector("a").classList.add("on");
+
+    /*
+     * 스크롤
+     */
+    const ulHeight = $(".search-menu .search-auto-layer ul.kwd-list").height();
+    const ulTop = $(".search-menu .search-auto-layer ul.kwd-list").scrollTop();
+    const ulBottom = ulTop + ulHeight;
+
+    const itemTop =
+        $(".search-menu .search-auto-layer ul.kwd-list li a.on").offset().top
+        - $(".search-menu .search-auto-layer ul.kwd-list").offset().top
+        + $(".search-menu .search-auto-layer ul.kwd-list").scrollTop();
+    const itemBottom = itemTop + $(".search-menu .search-auto-layer ul.kwd-list li a.on").outerHeight();
+
+    // 위로 가는 경우
+    if(itemTop < ulTop){
+        $(".search-menu .search-auto-layer ul.kwd-list").scrollTop(itemTop);
+    }
+    // 아래로 가는 경우
+    else if(itemBottom > ulBottom){
+        $(".search-menu .search-auto-layer ul.kwd-list").scrollTop(itemBottom - ulHeight);
+    }
+}
+
+// 엔터키 입력 시 검색 창 이동 기능 추가
+const goToSelectedUrl = () => {
+    const selected = $(".search-menu .search-auto-layer ul.kwd-list li a.on");
+
+    if(selected.length == 0){
+        return;
+    }
+
+    const url = selected.attr("href");
+    const is_blank = selected.attr("target") == "_blank";
+
+    // 인창열기
+    if(is_blank != true){
+        location.href = url;
+    }
+    // 새창열기
+    else{
+        window.open(url, "_blank");
+    }
+}
+
+// 메뉴 검색 리셋
+const resetMenuSearch = () => {
+    $(".search-menu .search-input input").val("");
+
+    $(".search-menu .btn-inp-reset").hide();
+    $(".search-menu .search-input-area").removeClass("active");
+    $(".search-menu .search-auto-layer").removeClass("active");
+
+    menuIndex = -1;
+}

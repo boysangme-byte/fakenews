@@ -1,0 +1,454 @@
+function getScrollTopPercent() {
+    return Math.floor(($(window).scrollTop() / ($(document).height() - $(window).height())) * 100);
+}
+// 상단바 스크롤 위치 세팅
+$(window).scroll(function(){
+    var widthPercent = getScrollTopPercent();
+    $('.scroll-indicator > div').width(widthPercent+'%');
+});
+
+/*
+// 2025.03.18 검색 최적화 이슈로 인해 우측 스크롤 이벤트 제거 
+if($('aside > .aside-inner').length > 0){
+
+	//우측 모듈
+	var asideTop = $('.aside-inner').offset().top;
+	// .article-wrap -> .article-body-wrap 수정
+	
+	//좌측 컨트롤박스
+	var control = $(".utility");
+	var controlTop = $(".utility").offset().top;
+
+	
+	// 클린뷰인 경우 우측 스크롤 이벤트 X
+	if(!cleanView) {
+		$(window).on("scroll", function(){
+			var wrap_contTop = $('.article-wrap').offset().top;
+			
+			//우측 모듈
+			var asideHeight = $(".aside-inner").outerHeight();
+			
+			var wrap_contHeight =  $(".article-wrap").outerHeight(); //innerHeight
+			var windowHeight = $(window).outerHeight();
+			
+			var stopPos = wrap_contTop + wrap_contHeight;
+			var asideBottom = asideHeight + asideTop;
+			var standard = $(window).scrollTop() + $(window).height();
+			var asideTop2 = $('.aside-inner').offset().top;
+
+			if($(window).scrollTop() == 0){
+				$('.aside-inner').css({"position":"","bottom":"","top":""});
+			}else if(standard >= asideBottom && stopPos > standard){
+				$('.aside-inner').css({"position":"fixed","bottom":"0"});
+			}else if(standard >= stopPos){
+				$('.aside-inner').css({"position":"absolute","bottom":"0"});
+			}else if(asideTop > asideTop2){
+				$('.aside-inner').css({"position":"","bottom":"","top":""});
+			}
+		});
+	}
+}
+*/
+
+
+if($('#clipboardUrl').length > 0){
+	var clipboard = null;
+	if(typeof ClipboardJS == 'function' ){
+		clipboard = new ClipboardJS('#clipboardUrl');
+	}else{
+		clipboard = new Clipboard('#clipboardUrl');
+	}
+	
+	clipboard.on('success', function(e) {
+		alert("주소가 복사되었습니다.\n원하는 곳에 붙여넣기 해주세요.");
+		e.clearSelection();
+	});
+
+	clipboard.on('error', function(e) {
+		alert("오류가 발생했습니다.");
+	});
+}
+
+// 댓글영역으로 이동
+$('.login-tool-comment').click(function(){
+	if($('#commentsSector-hk').length > 0) {
+		$(window).scrollTop($('#commentsSector-hk').offset().top - 200);
+	} else {
+		$(window).scrollTop($('#commentsSector').offset().top - 100);
+	}
+});
+
+// 로그인 페이지 이동
+$('#go_login_page').on('click', function(){
+
+	if($(this).data('cleanview') == 'y') {
+		setCleanViewCookie();
+	}
+
+	location.href = 'https://member.hankyung.com/apps.frame/login?url='+url;
+})
+
+// 클린뷰 모드
+$('.btn_cleanview').on('click',function(){
+
+	$('#go_login_page').data('cleanview', 'y');
+
+    if(!loginCheck()) return false;
+
+	setCleanViewCookie();
+
+	location.href = $(this).data('url');
+});
+
+$('#articletxt a:not([href^=mailto])').not('.summary').not('.poll').not('.stock-link').not('.stock-layer > a').addClass('marker');
+$('#articletxt ul a').removeClass('marker');
+$('#articletxt ol a').removeClass('marker');
+
+$(function(){
+	// 본문 폰트
+	// if($.cookie('fontSize')){
+	// 	$('.article-body-wrap').addClass('fontSize'+$.cookie('fontSize'));
+	// }
+	// if($.cookie('lineSize')){
+	// 	$('.article-body-wrap').addClass('lineH'+$.cookie('lineSize'));
+	// }
+
+	// 개인화 서비스 제외하는 경우
+	if(notPersonalService) $('.not_personal_service').remove();
+	
+	// 클린뷰 테마선택
+	$('.theme-list button').on('click',function(){
+		var cleanThemeClass = 'theme-'+$(this).data('theme');
+
+		var todayDate = new Date();
+		todayDate.setHours(24,0,0,0);
+		$.cookie('cleanViewTheme',cleanThemeClass,{expires:todayDate, path:'/', domain: '.hankyung.com'});
+
+		$('body').removeClass('theme-sepia theme-light theme-dark').addClass(cleanThemeClass);
+
+		// 댓글모듈 테마적용
+		if($('#commentsSector-hk').length > 0) {
+			document.querySelector('#hk-comment-client').contentWindow.postMessage( {type:'setTheme'}, '*' );
+		}
+
+		// 오디오모듈 테마적용
+		if($('.article-audio').length > 0) {
+			$("iframe.article_view_audio").contents().find("body").removeClass('theme-sepia theme-light theme-dark').addClass(cleanThemeClass);
+		}
+	});
+
+	$(document).on('mouseup',function(e){
+		if (!$(e.target).is('.menuitem-theme') && !$(e.target).parents().is('.menuitem-theme')){
+			$('.menuitem-theme').removeClass('active');
+		};
+	});
+	
+	$('.btn-theme').on('click',function(){
+		$('.menuitem-theme').toggleClass('active');
+	});
+
+
+	// 팝업 외 영역 클릭 시 팝업 닫힘
+    $('html').click(function(e) {
+        if(!$(e.target).is(".common_alert *") 
+			&& !$(e.target).is(".login_need *") 
+			&& !$(e.target).is(".empathy-wrap *") 
+			&& !$(e.target).is(".utility *")
+			&& !$(e.target).is(".article-tool *")
+			&& !$(e.target).is(".hk-modal *")
+			&& !$(e.target).is(".btn-photo-viewer *")
+			&& !$(e.target).is(".btn-share-tool-more *")
+		) 
+		{ 
+            $('.hk-modal').removeClass('show');
+        }
+    });
+
+	// 공유 팝업 
+	$('.share-tool-more, .btn-share-tool-more').on('click', function(){
+		// 프로모션 배너 닫기
+		$('.promotion-floating2').remove();
+
+		$('.hk-modal.modal-share').addClass('show');
+	})
+
+	// 유틸 모듈 레이어 닫기 
+	$(document).on('click', '.modal-btn-close', function(){
+		$('.hk-modal').removeClass('show');
+
+		// 기자 상세 레이어 삭제
+		$('.hk-modal.modal-journalist').remove();
+	})
+
+	// 팝업 레이어 닫기
+	$(document).on('click', '.modal-btn-cancel', function(){
+		$('.hk-modal').removeClass('show');
+
+		// 기자 상세 레이어 삭제
+		$('.hk-modal.modal-journalist').remove();
+	})
+
+	// 기자구독, 스크랩 툴바 닫기 
+	$(document).on('click', '.toast__btn-close', function(){
+		//$('.toast__body').hide();
+		$('.hk__toast').removeClass('show');
+	})
+
+	// 프린트 팝업 
+	$('.login-tool-print').click(function(e){
+		e.preventDefault();
+		
+		if(!loginCheck()) return false;
+
+		var aid = $(this).attr('data-aid');
+		window.open('https://www.hankyung.com/print/'+aid, 'print', 'left=50, top=50, width=700, height=600, scrollbars=yes, scrollbars=1, status=no, status=0');
+	});
+
+	// 글자크기, 행간조절 팝업 
+	$('.btn-font').on('click', function(){
+		$('.hk-modal.modal-font').addClass('show');
+	})
+
+	// 글자크기 range slider 
+	$("#fontRangeSlider").each(function(e) {
+		var min = $(this).data('min');
+		var max = $(this).data('max');
+		var startVal = $(this).data('start');
+		var step = $(this).data('step');
+		
+		$(this).slider({
+			value: startVal,
+			min: min,
+			max: max,
+			step: step,
+			slide: function(event,ui) {
+				$('.article-body-wrap').removeClass('fontSize1 fontSize2 fontSize3 fontSize4 fontSize5');
+				$('.article-body-wrap').addClass('fontSize'+ui.value);
+				$.cookie('fontSize',ui.value,{expires: -1,path:'/',domain: '.hankyung.com'});
+				$.cookie('fontSize',ui.value,{expires: 365,path:'/article'});
+			}
+		});
+	});
+
+	// 행간 range slider 
+	$("#lineRangeSlider").each(function(e) {
+		var min = $(this).data('min');
+		var max = $(this).data('max');
+		var startVal = $(this).data('start');
+		var step = $(this).data('step');
+		
+		$(this).slider({
+			value: startVal,
+			min: min,
+			max: max,
+			step: step,
+			slide: function(event,ui) {
+				$('.article-body-wrap').removeClass('lineH1 lineH2 lineH3');
+				$('.article-body-wrap').addClass('lineH'+ui.value);
+				$.cookie('lineSize',ui.value,{expires: -1,path:'/',domain: '.hankyung.com'});
+				$.cookie('lineSize',ui.value,{expires: 365,path:'/article'});
+			}
+		});
+	});
+
+	// 이미지 슬라이드 기능 //
+	$('.article-slide-option .btn-view-expand').on('click', function(){
+		if($(this).hasClass('on')) return false;
+		
+		$('.article-slide-option .view-nav, .article-slide-option .view-paging').hide();
+
+		$('.article-slide-option .view-type button').removeClass('on');
+		$(this).addClass('on');
+		$('.article-slide').slick('unslick');
+	});
+
+	$('.article-slide-option .btn-view-slide').on('click', function(event){
+		if($(this).hasClass('on')) return false;
+
+		$('.article-slide-option .view-paging strong').text('1');
+		$('.article-slide-option .view-nav, .article-slide-option .view-paging').show();
+		$('.article-slide-option .view-type button').removeClass('on');
+		$(this).addClass('on');
+
+		$('.article-slide').slick({
+			prevArrow: $('.article-slide-option .btn-prev'),
+			nextArrow: $('.article-slide-option .btn-next'),
+		}).on('setPosition', function (event, slick) {
+			$('.article-slide .article-figure').css('height', slick.$slideTrack.height() + 'px');
+		}).on('afterChange', function (event, slick, currentSlide, nextSlide){
+			$('.article-slide-option .view-paging strong').text(currentSlide+1);
+		});
+
+		if(event.originalEvent){
+			$('html, body').animate({scrollTop: $('.article-slide-wrap').offset().top - 300}, 0);
+		}
+	});
+
+	$('.article-slide-option .btn-view-slide').trigger('click');
+	// 이미지 슬라이드 기능 //
+
+	// 분야별 주요뉴스 슬라이드 
+	// $('.section-topnews-slider').slick({
+	// 	infinite: true,
+	// 	slidesToShow: 4,
+	// 	slidesToScroll: 4
+	// });
+
+	// 이미지 크게보기 
+	$('.btn-photo-viewer').on('click', function(){
+		$('.hk-modal.modal-photoviewer img').attr('src', $(this).data('src'));
+		$('.hk-modal.modal-photoviewer img').attr('alt', $(this).data('caption'));
+		$('.hk-modal.modal-photoviewer .figure-caption').text($(this).data('caption'));
+
+		$('.hk-modal.modal-photoviewer').addClass('show');
+	})
+
+	// 이미지 크게보기 창 열려있을 시 스크롤하면 닫힘 
+	$(window).scroll(function(){
+		if($('.hk-modal.modal-photoviewer').hasClass('show')) {
+			$('.hk-modal.modal-photoviewer').removeClass('show');
+		}
+	});
+	
+	// .summary, blockquote 스크롤 도달 시 이벤트
+	// var lastScrollTop = 0;
+	// var headerHeight = $('header').height() + $('.ad_top').height() + $('.headline').height() + $('.article-byline-wrap').height();
+	// $(window).scroll(function(){
+	// 	var scrolltop = $(this).scrollTop();
+
+	// 	if (scrolltop > lastScrollTop){
+	// 		// downscroll code
+	// 		if(checkVisible($('.summary'), scrolltop, headerHeight) && !$('.summary').hasClass('on')) {
+	// 			$('.summary').addClass('on');
+	// 		}
+
+	// 		if(!checkVisible($('.summary'), scrolltop, headerHeight) && $('.summary').hasClass('on')) {
+	// 			$('.summary').removeClass('on');
+	// 		}
+
+	// 		if(checkVisible($('blockquote'), scrolltop, headerHeight) && !$('blockquote').hasClass('on')) {
+	// 			$('blockquote').addClass('on');
+	// 		}
+
+	// 		if(!checkVisible($('blockquote'), scrolltop, headerHeight) && $('blockquote').hasClass('on')) {
+	// 			$('blockquote').removeClass('on');
+	// 		}
+	// 	}
+	// 	lastScrollTop = scrolltop;
+	// });
+
+	// 2025.02.07 스페이스바 스크롤 이동 시 header 영역은 제외하고 이동
+	$(document).on("keydown", (e) => {
+		if (e.keyCode == 32) {
+			const shiftKey = e.shiftKey;
+
+			e.preventDefault();
+
+			let scrollTop;
+
+			// shift키 입력 시 위로 가도록 수정
+			if(shiftKey == true){
+				scrollTop = $(window).scrollTop() - $(window).height() + $(".hk-header").height();
+			}else{
+				scrollTop = $(window).scrollTop() + $(window).height() - $(".hk-header").height();
+			}
+
+			$("html, body").animate({scrollTop: scrollTop}, 200);
+		}
+	});
+});
+
+function checkVisible( elm , scrolltop, headerHeight ) {
+	if(elm.length == 0) return false;
+
+    var viewportHeight = $(window).height(), // Viewport Height
+        // scrolltop = $(window).scrollTop(), // Scroll Top
+		y = $(elm).offset().top;
+        elementHeight = $(elm).height();   
+		
+	if(y > $(window).height()) {
+		return ((y < (viewportHeight + scrolltop - 300)) && (y > (scrolltop - elementHeight)));
+	} else {
+		return y < scrolltop + headerHeight;
+	}
+}
+
+// 로그인이 필요한 기능인 경우 호출 
+function loginCheck() {
+	var userid = $.cookie('SSOid');
+
+	if(typeof userid == "undefined" || userid == '' || userid == null) {
+		// 기존에 열려있는 레이어를 닫는다.
+		$('.modal-btn-cancel').click();
+		
+		// 프로모션 배너 닫기
+		$('.promotion-floating2').remove();
+
+        $('.common_alert').addClass('show');
+		return false;
+    } else {
+		return true;
+	}
+}
+
+var timer = "";
+// 기자구독 / 스크랩 알림툴바 
+function alertToolbar(id) {
+
+	clearTimeout(timer);
+
+	if(id == 'success_scrap') {
+		$('.hk__toast .svg-icon').attr('fill','#ff761b');
+		$('.hk__toast .mgs').html('스크랩되었습니다.<br><a href="/myhankyung"><strong class="msg-primary">My한경</strong></a>에서 확인할 수 있습니다.');
+	} else if(id == 'deleted_scrap') {
+		$('.hk__toast .svg-icon').attr('fill','#ccc');
+		$('.hk__toast .mgs').html('스크랩이 삭제되었습니다.');
+	} else if(id == 'success_reporter') {
+		$('.hk__toast .svg-icon').attr('fill','#ff761b');
+		$('.hk__toast .mgs').html('구독되었습니다.<br><a href="/myhankyung"><strong class="msg-primary">My한경</strong></a>에서 확인할 수 있습니다.');
+	} else if(id == 'deleted_reporter') {
+		$('.hk__toast .svg-icon').attr('fill','#ccc');
+		$('.hk__toast .mgs').html('구독이 취소되었습니다.');
+	}
+
+	$('.hk__toast').addClass('show');
+
+	timer = setTimeout(function(){
+		$('.hk__toast').removeClass('show');
+	}, 4000);
+}
+
+// 클린뷰 쿠키세팅
+function setCleanViewCookie(){
+	if(cleanView){
+		$.removeCookie('cleanViewMode',{ path: '/', domain: '.hankyung.com'});
+	}else{
+		var todayDate = new Date();
+		todayDate.setHours(24,0,0,0);
+		$.cookie('cleanViewMode','check',{expires:todayDate, path:'/', domain: '.hankyung.com'});
+	}
+}
+
+var sendLinkKakao = function(){};
+try {
+	Kakao.init('ffed1532c454a2d6ef89a6c11e7ec826');
+	sendLinkKakao = function() {
+		Kakao.Link.sendDefault({
+			objectType: 'feed',
+			content: {
+				title: '[한국경제] ' + htmlspecialchars_decode(snsData.title),
+				imageUrl: snsData.image,
+				imageWidth:Number(snsData.imageWidth),
+				imageHeight:Number(snsData.imageHeight),
+				link: {
+					mobileWebUrl: snsData.url,
+					webUrl: snsData.url
+				}
+			},
+			buttonTitle : '기사 보러가기'
+		});
+		
+	};
+}catch(e){
+	console.log(e);
+}

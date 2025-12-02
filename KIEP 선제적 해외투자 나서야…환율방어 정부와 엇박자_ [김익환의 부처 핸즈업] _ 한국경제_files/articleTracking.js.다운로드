@@ -1,0 +1,376 @@
+$(function(){
+    // if(typeof HKGATracker == 'undefined') return true;
+
+    let checkTime = false;
+    let checkScroll = false;
+    let checkAll = false;
+
+    let speedCheckTime = false;
+    let speedCheckAll = false;
+    
+    // let articleScroll = 0;
+    let exitPage = false;
+
+    const readTime = Number(GATrackingData.hk_word_count) * 0.08;
+    const speedReadTime = Number(GATrackingData.hk_word_count) * 0.04;
+
+    let lastHiddenTime = null;
+    const pageHiddenTime = 30 * 60 * 1000; // 30분을 밀리초로 변환
+
+
+    const pageStartTime = Date.now();
+
+    // 기사별 체류 시간 도달 이벤트
+    const checkTimeSetTimeout = setTimeout(() => {
+        checkTime = true;
+        HKGATracker.sendGAEvent({event_name:'complete_time_event'}, false);
+
+        if(checkScroll && !checkAll){
+            checkAll = true;
+            HKGATracker.sendGAEvent({event_name:'complete_all_event'}, false);
+        }
+    }, readTime * 1000);
+
+    // 기사별 속독 체류 시간 도달 이벤트
+    const speedCheckTimeSetTimeout = setTimeout(() => {
+        speedCheckTime = true;
+
+        if(checkScroll && !speedCheckAll){
+            speedCheckAll = true;
+            HKGATracker.sendGAEvent({event_name:'complete_speed_event'}, false);
+        }
+    }, speedReadTime * 1000);
+
+    // 바이라인 도달 이벤트
+    const bylineScrollCheck = function() {
+        if(checkScroll) return true;
+
+        const targetElement = document.getElementById('articletxt');
+        const rect = targetElement.getBoundingClientRect();
+
+        const scrollPosition = window.scrollY || window.pageYOffset;
+        const targetPositionTop = scrollPosition + rect.top;
+        const targetPositionBottom = targetPositionTop + rect.height;
+
+        if (scrollPosition + window.innerHeight >= targetPositionBottom) {
+            checkScroll = true;
+            HKGATracker.sendGAEvent({event_name:'complete_byline_event'}, false);
+
+            // 속독 완독 이벤트
+            if(speedCheckTime && !speedCheckAll){
+                speedCheckAll = true;
+                HKGATracker.sendGAEvent({event_name:'complete_speed_event'}, false);
+            }
+
+            // 완독 이벤트
+            if(checkTime && !checkAll){
+                checkAll = true;
+                HKGATracker.sendGAEvent({event_name:'complete_all_event'}, false);
+            }
+            window.removeEventListener('scroll', bylineScrollCheck);
+        }
+    }
+    window.addEventListener('scroll', bylineScrollCheck);
+
+    // 스크롤값 저장
+    // const articleScrollPercentage = function() {
+    //     const targetElement = document.getElementById('articletxt');
+    //     const rect = targetElement.getBoundingClientRect();
+    //     const windowHeight = window.innerHeight;
+
+    //     // 스크롤 백분율 계산
+    //     const scrollPosition = window.scrollY || window.pageYOffset;
+    //     const targetPositionTop = scrollPosition + rect.top;
+    //     const targetPositionBottom = targetPositionTop + rect.height;
+
+    //     const scrollPercentage = ((scrollPosition + windowHeight) / targetPositionBottom) * 100;
+
+    //     // 스크롤 백분율을 0%에서 100% 사이로 클램핑
+    //     const clampedScrollPercentage = Math.floor(Math.min(Math.max(scrollPercentage, 0), 100));
+
+    //     if(clampedScrollPercentage > articleScroll) articleScroll = clampedScrollPercentage;
+    // }
+    // window.addEventListener('scroll', articleScrollPercentage);
+
+
+
+    /*
+     *  사용자 참여 이벤트 
+     */
+    let engagementCheckTime = false;
+    let engagementCheckClick = false;
+    const engagementTimeSetTimeout = setTimeout(() => {
+        engagementCheckTime = true;
+
+        if(engagementCheckClick){
+            HKGATracker.sendGAEvent({event_name:'article_engagement_event'}, false);
+        }
+    }, readTime * 0.2 * 1000);
+
+    const engagementClick = function() {
+        if(engagementCheckClick) return true;
+
+        engagementCheckClick = true;
+
+        if(engagementCheckTime){
+            HKGATracker.sendGAEvent({event_name:'article_engagement_event'}, false);
+        }
+    }
+
+    
+
+
+    const sendExitPageEvent = function(){
+        if(exitPage) return false;
+
+        exitPage = true;
+
+        // const thresholds = [90, 75, 50, 25];
+        // let scrollDepth = 0;
+
+        // for (let threshold of thresholds) {
+        //     if (articleScroll >= threshold) {
+        //         scrollDepth = String(threshold);
+        //         break;
+        //     }
+        // }
+
+        // HKGATracker.sendGAEvent({
+        //     event_name: 'article_scroll_event',
+        //     hk_article_scroll_depth: scrollDepth,
+        //     hk_article_scroll_depth_amount: articleScroll
+        // }, false);
+
+
+        let articleTime = Math.round((Date.now() - pageStartTime) / 1000);
+        if(articleTime > 1800) articleTime = 1800;
+
+        HKGATracker.sendGAEvent({
+            event_name: 'article_time_event',
+            hk_article_time_amount: articleTime
+        }, false);
+    }
+
+    const articleVisibilityState = function  () {
+        if (document.visibilityState === 'hidden') {
+            lastHiddenTime = new Date();
+        } else if (document.visibilityState === 'visible') {
+            if (lastHiddenTime) {
+                const now = new Date();
+                const timeElapsed = now - lastHiddenTime;
+    
+                if (timeElapsed > pageHiddenTime) {
+                    document.removeEventListener('visibilitychange', articleVisibilityState);
+                    window.removeEventListener('scroll', bylineScrollCheck);
+                    clearTimeout(checkTimeSetTimeout);
+                    sendExitPageEvent();
+                }
+                lastHiddenTime = null;
+            }
+        }
+        // if (document.visibilityState === 'hidden') {
+        //     console.log('visibilitychange: hidden');
+        //     document.removeEventListener('visibilitychange', articleVisibilityState);
+        //     window.removeEventListener('scroll', bylineScrollCheck);
+        //     clearTimeout(checkTimeSetTimeout);
+
+        //     sendExitPageEvent();
+        // }
+    };
+    document.addEventListener('visibilitychange', articleVisibilityState);
+
+    window.onbeforeunload = function(){
+        sendExitPageEvent();
+    }
+
+    window.onunload = function(){
+        sendExitPageEvent();
+    }
+
+    {
+        let idleTime = 0;
+        const idleLimit = 60 * 30; // 사용자 비활동 시간 제한 (단위: 초)
+        let idleInterval;
+
+        // 사용자 활동 감지 함수
+        const resetIdleTime = () => {
+            idleTime = 0;
+            clearInterval(idleInterval);
+            idleInterval = setInterval(incrementIdleTime, 1000);
+        };
+
+        // 비활동 시간 증가 함수
+        const incrementIdleTime = () => {
+            idleTime++;
+            if (idleTime >= idleLimit) {
+                clearInterval(idleInterval);
+                removeEventListeners();
+                sendExitPageEvent();
+            }
+        };
+
+        // 이벤트 리스너 설정
+        const addEventListeners = () => {
+            document.addEventListener('mousemove', resetIdleTime);
+            document.addEventListener('keydown', resetIdleTime);
+            document.addEventListener('click', resetIdleTime);
+            document.addEventListener('scroll', resetIdleTime);
+        };
+
+        // 이벤트 리스너 해제 함수
+        const removeEventListeners = () => {
+            document.removeEventListener('mousemove', resetIdleTime);
+            document.removeEventListener('keydown', resetIdleTime);
+            document.removeEventListener('click', resetIdleTime);
+            document.removeEventListener('scroll', resetIdleTime);
+
+            document.removeEventListener('visibilitychange', articleVisibilityState);
+            window.removeEventListener('scroll', bylineScrollCheck);
+            clearTimeout(checkTimeSetTimeout);
+        };
+
+        // 초기 타이머 시작
+        idleInterval = setInterval(incrementIdleTime, 1000);
+
+        // 이벤트 리스너 추가
+        addEventListeners();
+    }
+
+
+    // 요소 클릭 이벤트
+    const eventObj = {
+        event_name: 'article_click_event',
+        hk_click_page: '기사뷰',
+        hk_click_area: '',
+        hk_click_label: ''
+    }
+
+    // 기자 페이지 링크
+    $('.author.link a').on('click', function(){
+        eventObj.hk_click_area = '기자';
+        eventObj.hk_click_label = $(this).text().trim().split(' ')[0];
+        HKGATracker.sendGAEvent(eventObj, false);
+        engagementClick();
+    });
+
+    // 폰트 크기 및 행간 조절
+    $('.btn-font, .tool-font').on('click', function(){
+        eventObj.hk_click_area = '상단';
+        eventObj.hk_click_label = '글자 크기/행간 조절';
+        HKGATracker.sendGAEvent(eventObj, false);
+        engagementClick();
+    });
+
+    // 본문 상단 유틸 영역
+    $('.utility .tools button').on('click', function(){
+        if(!$.cookie('SSOid') && ($(this).is('.login-tool-scrap, .login-tool-cleanview, .tool-scrap, .tool-cleanview'))){
+            return true;
+        }
+        if($(this).hasClass('tool-font')) return true;
+
+        if($(this).hasClass('login-tool-scrap') && $(this).hasClass('on')) return true;
+        if($(this).hasClass('tool-scrap') && $(this).hasClass('on')) return true;
+
+        eventObj.hk_click_area = '상단';
+        eventObj.hk_click_label = $.trim($(this).text().replace(/[0-9]/g, ''));
+        
+        HKGATracker.sendGAEvent(eventObj, false);
+        engagementClick();
+    });
+
+    // 공유하기 영역
+    $('.view-share-list button').on('click', function(){
+        eventObj.hk_click_area = '공유하기';
+        eventObj.hk_click_label = $.trim($(this).text());
+        HKGATracker.sendGAEvent(eventObj, false);
+        engagementClick();
+    });
+
+
+    if($.cookie('SSOid')) {
+        // 기자 구독
+        $('.author.link button').on('click', function(){
+            if($(this).hasClass('on')) return true;
+            eventObj.hk_click_area = '기자';
+            eventObj.hk_click_label = $(this).closest('.author').data('name').trim().split(' ')[0] + '_구독';
+            HKGATracker.sendGAEvent(eventObj, false);
+            engagementClick();
+        });
+
+        // 공감 영역
+        $('.empathy-wrap button').on('click', function(){
+            if($(this).hasClass('on')) return true;
+            eventObj.hk_click_area = '기사 공감';
+            eventObj.hk_click_label = $.trim($(this).text().replace(/[0-9]/g, ''));
+            HKGATracker.sendGAEvent(eventObj, false);
+            engagementClick();
+        });
+    }
+
+    // 관련뉴스
+    $('.related-article .article-list-module').on('click', '.news-item a', function(){
+        eventObj.hk_click_area = '관련 뉴스';
+        eventObj.hk_click_label = $.trim($(this).closest('.news-item').find('.txt-cont a').text());
+        if($(this).closest('.news-item').data('token')){
+            eventObj.hk_click_ai = 'Y';
+            eventObj.hk_click_token = $(this).closest('.news-item').data('token');
+            eventObj.event_name = 'app_view_ai_click_event';
+            eventObj.hk_click_page = 'AI 기사 내 추천';
+            eventObj.hk_click_area = '추천 뉴스';
+            eventObj.hk_ai_article_link = $(this).attr('href')
+        }
+        HKGATracker.sendGAEvent(eventObj, false);
+        engagementClick();
+    });
+
+    // 많이 본 뉴스
+    $('.aside-inner .aside-component:eq(0) .news-item a').on('click', function(){
+        eventObj.hk_click_area = '많이 본 뉴스';
+        eventObj.hk_click_label = $.trim($(this).closest('.news-item').find('.txt-cont a').text());
+        HKGATracker.sendGAEvent(eventObj, false);
+        engagementClick();
+    });
+
+    // 많이 본 뉴스 - mobile
+    $('.article-list-module.has-rank .news-item a').on('click', function(){
+        eventObj.hk_click_area = '많이 본 뉴스';
+        eventObj.hk_click_label = $.trim($(this).closest('.news-item').find('.txt-cont a').text());
+        HKGATracker.sendGAEvent(eventObj, false);
+        engagementClick();
+    });
+
+    //로그인 전용 월
+    $('#layer-memberlogin a').on('click', function(){
+        HKGATracker.sendGAEvent({
+            event_name: 'click_event',
+            hk_click_page: '회원전용',
+            hk_click_area: '로그인월',
+            hk_click_label: $(this).text().trim()
+        }, false);
+    });
+
+    // 유료 로그인 월
+    $('#layer-premiumlogin a').on('click', function(){
+        HKGATracker.sendGAEvent({
+            event_name: 'click_event',
+            hk_click_page: '유료전용',
+            hk_click_area: '구독월',
+            hk_click_label: $(this).text().trim()
+        }, false);
+    });
+
+    // AI 추천뉴스 팝업
+    $('#floating-recommended').on('click', '.recommended-news-list a', function(){
+        HKGATracker.sendGAEvent({
+            event_name: 'popup_ai_click_event',
+            hk_click_page: 'AI 팝업 추천',
+            hk_click_area: 'AI 추천 뉴스',
+            hk_click_label: $.trim($(this).closest('.news-item').find('.txt-cont a').text()),
+            hk_click_ai: 'Y',
+            hk_click_token: $(".layer-floating-recommended ul.recommended-news-list").data("attributionToken"),
+            hk_ai_article_link: $(this).attr('href')
+        }, false);
+    });
+});
+
+    

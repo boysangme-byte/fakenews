@@ -1,0 +1,133 @@
+
+$(function(){
+	
+	$('.btn-email, .email, #sendemail').click(function(e){
+		e.preventDefault();
+		const aid = $(this).attr('data-aid');
+		const title = $(this).attr('data-title');
+		const body = '[한경닷컴 기사공유]\n\n'+title+'\n\nhttps://www.hankyung.com/article/'+aid;
+		if(typeof aid == 'undefined' || aid == '') return false;
+
+		window.open('mailto:?subject='+encodeURIComponent('[한경닷컴 기사공유] '+title)+'&body='+encodeURIComponent(body));
+	});
+	//프린트 팝업 
+	$('.print').click(function(e){
+		e.preventDefault();
+		var aid = $(this).attr('data-aid');
+		window.open('https://www.hankyung.com/print/'+aid, 'print', 'left=50, top=50, width=700, height=600, scrollbars=yes, scrollbars=1, status=no, status=0');
+	});
+	
+	$('.btn_top').click(function(){
+		$('html, body').scrollTop(0);
+		return false;
+	});
+	
+	
+	// 우측 날개 광고
+	// if($('#stickyAd').length > 0){
+	// 	var stickyAdBottom = $('#stickyAd').position().top + $('#stickyAd').height();
+	// 	var stickyAdFixed = false;
+	// 	if(stickyAdBottom > $(window).height()){
+	// 		$('#stickyAd').css("position","absolute");
+	// 		stickyAdFixed = true;
+	// 	}
+		
+	// 	$(window).on("scroll", function () {
+	// 		var standard = $(window).scrollTop() + $(window).height();
+	// 		//우측 날개 광고
+	// 		if(stickyAdFixed && stickyAdBottom < standard - 75){
+	// 			$('#stickyAd').css({"position":"fixed","bottom":"75px"});
+				
+	// 		}else if(stickyAdFixed && stickyAdBottom > standard - 75 ){
+	// 			$('#stickyAd').css({"position":"absolute","bottom":""});
+	// 		}
+	// 	});
+	// }
+	
+});
+
+// function goCheckLoginPage(result){
+// 	var url = escape(document.location.href);
+// 	if(result == true || result.result_code == "0000"){
+// 		$('.wrap_user .login').hide();
+// 		$('.wrap_user .logout').show();
+// 		$('.wrap_user .info').show();
+// 	}else{
+// 		document.location.href = 'http://member.hankyung.com/apps.frame/login?url=' + url;
+// 	}
+// }
+
+function openSNS(sns, url, title){
+	var o;
+    var _url = encodeURIComponent(url);
+	if(title == ''){		
+		if(typeof snsData != 'undefined'){
+			title = htmlspecialchars_decode(snsData.title);
+		}else{
+			//title = $('strong.tit').text();
+			title = $('ul > li > a[href="'+url+'"] strong.tit').text();
+		}
+	}
+    var _title = encodeURIComponent(title);
+    var _br  = encodeURIComponent('\r\n');
+	
+	switch(sns)
+    {
+        case 'facebook':
+            o = {
+                height:600,
+                width:600,
+                url:'https://www.facebook.com/sharer/sharer.php?u=' + _url
+            };
+            break;
+
+        case 'twitter':
+            o = {
+                height:640,
+                width:600,
+                url:'https://twitter.com/intent/tweet?text=' + _title + '&url=' + _url
+            };
+            break;
+
+        case 'google':
+            o = {
+                height:600,
+                width:600,
+                url:'https://plus.google.com/share?url=' + _url
+            };
+            break;
+
+        case 'naverblog':
+        		o = {
+                height:600,
+                width:600,
+                url:'https://blog.naver.com/openapi/share?url=' + _url + '&title=' + _title
+            };
+            break;
+		case 'navershare':
+        		o = {
+                height:600,
+                width:600,
+                url:'https://share.naver.com/web/shareView.nhn?url=' + _url + '&title=' + _title
+            };
+            break;
+		case 'naverband':
+				_title = _title + _br + url;
+        		o = {
+                height:600,
+                width:600,
+                url:'https://www.band.us/plugin/share?route=' + url + '&body=' + _title
+            };
+            break;
+
+        default:
+            return false;
+    }
+	
+	if( o.height > 0 && o.width > 0 ){
+		window.open(o.url,'', 'menubar=no,toolbar=no,resizable=yes,scrollbars=yes,height='+o.height+',width='+o.width);
+	}
+	else{
+		 window.open(o.url);
+	}
+}

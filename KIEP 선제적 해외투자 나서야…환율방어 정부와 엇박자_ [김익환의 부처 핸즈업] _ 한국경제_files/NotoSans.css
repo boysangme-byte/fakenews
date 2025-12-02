@@ -1,0 +1,58 @@
+@charset "UTF-8";
+
+/* Google WebFont - NotoSans */
+
+@font-face {
+    font-family: 'Noto Sans KR';
+    font-style: normal;
+    font-weight: 100;
+    font-display: swap;
+    src: local('Noto Sans KR Thin'),
+         url(https://hkstatic.hankyung.com/resource/common/font/NotoSans/NotoSansKR-Thin.woff2) format("woff2"),
+         url(https://hkstatic.hankyung.com/resource/common/font/NotoSans/NotoSansKR-Thin.woff) format("woff");
+}
+@font-face {
+    font-family: 'Noto Sans KR';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: local('Noto Sans KR Light'),
+         url(https://hkstatic.hankyung.com/resource/common/font/NotoSans/NotoSansKR-Light.woff2) format("woff2"),
+         url(https://hkstatic.hankyung.com/resource/common/font/NotoSans/NotoSansKR-Light.woff) format("woff");
+}
+@font-face {
+    font-family: 'Noto Sans KR';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local('Noto Sans KR'),
+         url(https://hkstatic.hankyung.com/resource/common/font/NotoSans/NotoSansKR-Regular.woff2) format("woff2"),
+         url(https://hkstatic.hankyung.com/resource/common/font/NotoSans/NotoSansKR-Regular.woff) format("woff");
+}
+@font-face {
+    font-family: 'Noto Sans KR';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: local('Noto Sans KR Medium'),
+         url(https://hkstatic.hankyung.com/resource/common/font/NotoSans/NotoSansKR-Medium.woff2) format("woff2"),
+         url(https://hkstatic.hankyung.com/resource/common/font/NotoSans/NotoSansKR-Medium.woff) format("woff");
+}
+@font-face {
+    font-family: 'Noto Sans KR';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: local('Noto Sans KR Bold'),
+         url(https://hkstatic.hankyung.com/resource/common/font/NotoSans/NotoSansKR-Bold.woff2) format("woff2"),
+         url(https://hkstatic.hankyung.com/resource/common/font/NotoSans/NotoSansKR-Bold.woff) format("woff");
+}
+@font-face {
+    font-family: 'Noto Sans KR';
+    font-style: normal;
+    font-weight: 900;
+    font-display: swap;
+    src: local('Noto Sans KR Black'),
+         url(https://hkstatic.hankyung.com/resource/common/font/NotoSans/NotoSansKR-Black.woff2) format("woff2"),
+         url(https://hkstatic.hankyung.com/resource/common/font/NotoSans/NotoSansKR-Black.woff) format("woff");
+}

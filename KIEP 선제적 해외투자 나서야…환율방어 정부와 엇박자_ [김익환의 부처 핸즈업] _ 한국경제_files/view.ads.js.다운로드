@@ -1,0 +1,572 @@
+/*
+ * 닷컴 PC 기사뷰 광고 관리
+ */
+
+// 랜덤번호 생성(0 ~ num-1 까지) 
+function getRandomNumber(num){
+	return Math.floor(Math.random() * num);
+}
+
+/**
+ * 공통 광고 HTML 생성 함수
+ * @adScript : (Array) 광고 스크립트
+ * @height : (String) 광고 높이
+ * @type : (String) 광고 타입
+ * @wrapClass : (String) 광고 영역에 추가할 클래스명
+ */ 
+const adCommonHtml = (adScript, height, type, wrapClass="") => {
+	let adHtml = "";
+	switch(type) {
+		// 1단 광고
+		case 'one-column':
+			adHtml = `<div class="ad-area-wrap bg ad_area ${wrapClass}">
+						<p class="ad-label">ADVERTISEMENT</p>
+						<div class="ad-wrap" style="min-height:${height}px">
+							<div class="ad-box">${adScript[0]}</div>
+						</div>
+					</div>`;
+			break;
+		// 2단 광고
+		case 'two-column':
+			adHtml = `<div class="ad-area-wrap bg ad_area ${wrapClass}">
+						<p class="ad-label">ADVERTISEMENT</p>
+						<div class="ad-wrap" style="min-height:${height}px">
+							<div class="ad-box">
+								${adScript[0]}
+							</div>
+							<div class="ad-box">
+								${adScript[1]}
+							</div>
+						</div>
+					</div>`;
+			break;
+        // 우측 이미지 광고
+        case 'right-image':
+            adHtml = `<div class="aside-component aside-ad ad-area-wrap ad_area ${wrapClass}"> 
+                        <p class="ad-label">ADVERTISEMENT</p>
+                        <div class="ad-wrap" style="min-height:${height}px">
+                            ${adScript[0]}
+                        </div>
+                    </div>`
+	}
+
+	return adHtml;
+}
+
+/** 구글광고 **/
+googleads = {};
+
+// 최상단 광고
+googleads.ad_top = {
+	id: 'hdvT01_leaderboardn'
+	, position: 'div-gpt-ad-1658815907249-0'
+	, size: [970, 250]
+	, style: 'min-width:728px; min-height:90px;'
+}
+
+// 본문 광고(인아티클01 왼쪽)
+googleads.inline1_left = {
+	id: 'hdvI_inarticle01'
+	, position: 'div-gpt-ad-1689725750784-0'
+	, size: [300, 250]
+	, style: 'min-width: 300px; min-height: 250px;'
+}
+
+// 본문 광고(인아티클01 오른쪽)
+googleads.inline1_right = {
+	id: 'hdvI_inarticle02'
+	, position: 'div-gpt-ad-1689725839397-0'
+	, size: [300, 250]
+	, style: 'min-width: 300px; min-height: 250px;'
+}
+
+
+// 본문 광고(인아티클02 왼쪽)
+// 2024.06.03 광고코드 변경 by yong
+googleads.inline2_left = {
+	id: 'hdvI03_inarticle03'
+	, position: 'div-gpt-ad-1656294096032-0'
+	, size: [300, 250]
+	, style: 'min-width: 300px; min-height: 250px;'
+}
+
+// 본문 광고(인아티클02 오른쪽)
+googleads.inline2_right = {
+	id: 'hdvI04_inarticle04'
+	, position: 'div-gpt-ad-1656294201269-0'
+	, size: [300, 250]
+	, style: 'min-width: 300px; min-height: 250px;'
+}
+
+// 본문 광고(인아티클03 왼쪽)
+googleads.inline3_left = {
+	id: 'hdvI05_inarticle05'
+	, position: 'div-gpt-ad-1656294310265-0'
+	, size: [300, 250]
+	, style: 'min-width: 300px; min-height: 250px;'
+}
+
+// 본문 광고(인아티클03 오른쪽)
+googleads.inline3_right = {
+	id: 'hdvI06_inarticle06'
+	, position: 'div-gpt-ad-1656294386367-0'
+	, size: [300, 250]
+	, style: 'min-width: 300px; min-height: 250px;'
+}
+
+// 본문 광고(인아티클04 왼쪽)
+googleads.inline4_left = {
+	id: 'hdvI07_inarticle07'
+	, position: 'div-gpt-ad-1656294478952-0'
+	, size: [300, 250]
+	, style: 'min-width: 300px; min-height: 250px;'
+}
+
+// 본문 광고(인아티클04 오른쪽)
+googleads.inline4_right = {
+	id: 'hdvI08_inarticle08'
+	, position: 'div-gpt-ad-1656294544672-0'
+	, size: [300, 250]
+	, style: 'min-width: 300px; min-height: 250px;'
+}
+
+
+// 기사하단 바이라인 아래(left)
+googleads.byline_left = {
+	id: 'hdv405_view_B_rec03'
+	, position: 'div-gpt-ad-1656034614557-0'
+	, size: [300, 250]
+	, style: 'min-width:300px; min-height:250px;'
+}
+
+// 기사하단 바이라인 아래(right)
+googleads.byline_right = {
+	id: 'News_Rec2'
+	, position: 'div-gpt-ad-1656034826411-0'
+	, size: [300, 250]
+	, style: 'min-width:300px; min-height:250px;'
+}
+
+
+// 기사하단 최하단 970*250
+googleads.bottom = {
+	id: 'News_Leaderboard2'
+	, position: 'div-gpt-ad-1656034495206-0'
+	, size: [970, 250]
+	, style: 'min-width:728px; min-height:90px;'
+}
+
+// 기사우측단 오늘의 주요뉴스 아래 300*600
+googleads.sideRectangle1 = {
+	id: 'hdvS01_rectangle01_300_250'
+	, position: 'div-gpt-ad-1656033439479-0'
+	, size:  [300, 600]
+	, style: 'min-width:300px; min-height:250px;'
+}
+
+// 기사우측단 이시각 관심정보 아래 콘도 바터 광고
+// 2024.08.29 광고 일시 홀딩 by yongt
+// googleads.sideRectangle4 = {
+// 	id: 'hdvS_halfrectangle'
+// 	, position: 'div-gpt-ad-1721260300660-0'
+// 	, size:  [300, 100]
+// 	, style: 'min-width:300px; min-height:100px;'
+// }
+
+// 기사우측단 추천뉴스 아래 300*250
+googleads.sideRectangle2 = {
+	id: 'hdvS02_rectangle02_300_250'
+	, position: 'div-gpt-ad-1656033509742-0'
+	, size:  [300, 250]
+	, style: 'min-width:300px; min-height:250px;'
+}
+
+// 기사우측단 하단 300*600
+googleads.sideRectangle3 = {
+	id: 'hdvS10_Skyscraper'
+	, position: 'div-gpt-ad-1656033569914-0'
+	, size:  [300, 600]
+	, style: 'min-width:300px; min-height:250px;'
+}
+
+// 댓글 아래 왼쪽
+googleads.comment_bottom_ad_left = {
+	id: 'News_Rec1'
+	, position: 'div-gpt-ad-1667781807615-0'
+	, size: [300, 250]
+	, style: 'min-width: 300px; min-height: 250px;'
+}
+
+// 댓글 아래 오른쪽
+googleads.comment_bottom_ad_right = {
+	id: 'hdvB04_rectangle04'
+	, position: 'div-gpt-ad-1667781875960-0'
+	, size: [300, 250]
+	, style: 'min-width: 300px; min-height: 250px;'
+}
+
+// 하이라이트 배너 아래(2022-11-28 교체 by 김용태)
+// googleads.highlight_bottom_ad = {
+// 	id: 'hdvB05_multiplex01'
+// 	, position: 'div-gpt-ad-1667781740126-0'
+// 	, size: ['fluid',[610, 270]]
+// 	, style: 'min-width: 610px; min-height: 270px;'
+// }
+
+// 하단 하이라이트 광고1(2022-11-28 추가 by 김용태)
+googleads.highlight_bottom_ad1 = {
+	id: 'hdvb05_rectangle05'
+	, position: 'div-gpt-ad-1669599078252-0'
+	, size: [300, 250]
+	, style: 'min-width: 300px; min-height: 250px;'
+}
+
+// 하단 하이라이트 광고2(2022-11-28 추가 by 김용태)
+googleads.highlight_bottom_ad2 = {
+	id: 'hdvb06_rectangle06'
+	, position: 'div-gpt-ad-1669599041632-0'
+	, size: [300, 250]
+	, style: 'min-width: 300px; min-height: 250px;'
+}
+
+// 댓글 아래 하이라이트
+// googleads.comment_bottom_highlight_ad = {
+// 	id: 'hdvB_leaderboard'
+// 	, position: 'div-gpt-ad-1717740184852-0'
+// 	, size: [610, 174]
+// 	, style: 'min-width: 610px; min-height: 115px;'
+// }
+
+// var googletag = googletag || {};
+// googletag.cmd = googletag.cmd || [];
+
+window.googletag = window.googletag || {cmd: []};
+
+googletag.cmd.push(function(){
+	$.each(googleads, function(idx, val){
+		googletag.defineSlot('/3448900/'+val.id, val.size, val.position).addService(googletag.pubads());
+	});
+	googletag.defineOutOfPageSlot('/3448900/hdvO_sticky', googletag.enums.OutOfPageFormat.BOTTOM_ANCHOR).addService(googletag.pubads());
+	
+	googletag.pubads().set('page_url', 'Hankyung.com');
+	googletag.pubads().collapseEmptyDivs();
+	googletag.pubads().setCentering(true);
+	googletag.pubads().enableSingleRequest();
+	googletag.enableServices();
+});
+
+// $(".aside-component.aside-ad").eq(2).html('<script>adtiveDrawAD("UPFFFFFP","YXRLLLLF");</script>');
+
+$(function(){
+	/** 구글광고 **/
+	// 최상단 광고
+	$("#ad-top-leaderboard").html(`<div id="${googleads.ad_top.position}"></div>`);
+	googletag.cmd.push(function(){googletag.display(googleads.ad_top.position);});
+
+	if(!inarticleNoAds) {
+		// 기사내 인아티클01(3문단 이상일 때 2문단 뒤)
+		if(paragraph > 3) {
+			// 정치,국제,사회 카테고리 구글 100% 2023.07.19 by jun
+			// 2023.08.21 위 카테고리 외에는 티즈 90%, 구글 광고 10%로 출력되도록 수정
+			// 2023.10.16 티즈:구글 = 7:3 로 변경
+			/* 2024.10.28 
+			 * 정치,국제,사회는 디지털캠프:구글=7:3
+			 * 나머지는 디지털캠프:티즈:구글=4:4:2로 변경 by jun
+			 **/
+			const randNum = getRandomNumber(10);
+			if(category == 'politics' || category == 'international' || category == 'society' ) {
+				if(randNum < 7) {
+					$('br.paragraph[data-index=2]').after('<div class="ad-area-wrap bg">\
+																<p class="ad-label">ADVERTISEMENT</p>\
+																<div class="ad-wrap" style="min-height:280px">\
+																	<div id="dcamp_ad_74346" class="ad-box"></div>\
+																</div>\
+															</div>');
+					$('br.paragraph[data-index=2]').after('<script src="https://tracker.digitalcamp.co.kr/dcamp_load_V2.php?mc=NzQzNDY&t=script&w=100%&url='+url+'" async></script>');
+				} else {
+					$('br.paragraph[data-index=2]').after('<div class="ad-area-wrap bg">\
+																<p class="ad-label">ADVERTISEMENT</p>\
+																<div class="ad-wrap" style="min-height:250px">\
+																	<div class="ad-box">\
+																		<div id="'+googleads.inline1_left.position+'"></div>\
+																	</div>\
+																	<div class="ad-box">\
+																		<div id="'+googleads.inline1_right.position+'"></div>\
+																	</div>\
+																</div>\
+															</div>');
+					googletag.cmd.push(function(){googletag.display(googleads.inline1_left.position);});
+					googletag.cmd.push(function(){googletag.display(googleads.inline1_right.position);});
+				}
+			} else {
+				if(randNum < 4) {
+					$('br.paragraph[data-index=2]').after('<div class="ad-area-wrap bg">\
+																<p class="ad-label">ADVERTISEMENT</p>\
+																<div class="ad-wrap" style="min-height:280px">\
+																	<div id="dcamp_ad_74346" class="ad-box"></div>\
+																</div>\
+															</div>');
+					$('br.paragraph[data-index=2]').after('<script src="https://tracker.digitalcamp.co.kr/dcamp_load_V2.php?mc=NzQzNDY&t=script&w=100%&url='+url+'" async></script>');
+				} else if(randNum < 8) {
+					$('br.paragraph[data-index=2]').after('<div class="ad-area-wrap bg">\
+																<p class="ad-label">ADVERTISEMENT</p>\
+																<div class="ad-wrap" style="min-height:250px">\
+																	<div class="ad-box">\
+																		<div id="teads_slot" style="text-align:center;"></div>\
+																	</div>\
+																</div>\
+															</div>');
+				} else {
+					$('br.paragraph[data-index=2]').after('<div class="ad-area-wrap bg">\
+																<p class="ad-label">ADVERTISEMENT</p>\
+																<div class="ad-wrap" style="min-height:250px">\
+																	<div class="ad-box">\
+																		<div id="'+googleads.inline1_left.position+'"></div>\
+																	</div>\
+																	<div class="ad-box">\
+																		<div id="'+googleads.inline1_right.position+'"></div>\
+																	</div>\
+																</div>\
+															</div>');
+					googletag.cmd.push(function(){googletag.display(googleads.inline1_left.position);});
+					googletag.cmd.push(function(){googletag.display(googleads.inline1_right.position);});
+				}
+			}
+		}
+
+		/* 기사내 인아티클02(왼쪽)(6문단 이상일 때 5문단 뒤)
+		기사내 인아티클02(오른쪽)(6문단 이상일 때 5문단 뒤)*/
+		if(paragraph > 6){
+			$('br.paragraph[data-index=5]').after('<div class="ad-area-wrap bg">\
+													<p class="ad-label">ADVERTISEMENT</p>\
+													<div class="ad-wrap" style="min-height:250px"> \
+														<div class="ad-box">\
+															<div id="'+googleads.inline2_left.position+'"></div>\
+														</div>\
+														<div class="ad-box">\
+															<div id="'+googleads.inline2_right.position+'"></div>\
+														</div>\
+													</div>\
+												</div>');
+			googletag.cmd.push(function(){googletag.display(googleads.inline2_left.position);});
+			googletag.cmd.push(function(){googletag.display(googleads.inline2_right.position);});
+		}
+
+		/* 기사내 인아티클03(왼쪽)(9문단 이상일 때 8문단 뒤)
+		기사내 인아티클03(오른쪽)(9문단 이상일 때 8문단 뒤) */
+		if(paragraph > 9){
+			$('br.paragraph[data-index=8]').after('<div class="ad-area-wrap bg">\
+													<p class="ad-label">ADVERTISEMENT</p>\
+													<div class="ad-wrap" style="min-height:250px"> \
+														<div class="ad-box">\
+															<div id="'+googleads.inline3_left.position+'"></div>\
+														</div>\
+														<div class="ad-box">\
+															<div id="'+googleads.inline3_right.position+'"></div>\
+														</div>\
+													</div>\
+												</div>');
+			googletag.cmd.push(function(){googletag.display(googleads.inline3_left.position);});
+			googletag.cmd.push(function(){googletag.display(googleads.inline3_right.position);});
+		}
+
+		/* 기사내 인아티클04(왼쪽)(12문단 이상일 때 11문단 뒤)
+		기사내 인아티클04(오른쪽)(12문단 이상일 때 11문단 뒤) */
+		if(paragraph > 12){
+			$('br.paragraph[data-index=11]').after('<div class="ad-area-wrap bg">\
+													<p class="ad-label">ADVERTISEMENT</p>\
+													<div class="ad-wrap" style="min-height:250px"> \
+														<div class="ad-box">\
+															<div id="'+googleads.inline4_left.position+'"></div>\
+														</div>\
+														<div class="ad-box">\
+															<div id="'+googleads.inline4_right.position+'"></div>\
+														</div>\
+													</div>\
+												</div>');
+			googletag.cmd.push(function(){googletag.display(googleads.inline4_left.position);});
+			googletag.cmd.push(function(){googletag.display(googleads.inline4_right.position);});
+		}
+	}
+
+	// 기사 종료(바이라인)
+
+	// 기사하단 바이라인 아래(left)
+	$("#byline_bottom_ad .ad-box").eq(0).html('<div id="'+googleads.byline_left.position+'"></div>');
+	googletag.cmd.push(function(){googletag.display(googleads.byline_left.position);});
+
+	// 기사하단 바이라인 아래(right)
+	$("#byline_bottom_ad .ad-box").eq(1).html('<div id="'+googleads.byline_right.position+'"></div>');
+	googletag.cmd.push(function(){googletag.display(googleads.byline_right.position);});
+
+	// $('#ad-byline-1').html();
+
+
+	// 댓글 아래 하이라이트
+	// $(".ad-wrap .comment_bottom_highlight_ad").html('<div id="'+googleads.comment_bottom_highlight_ad.position+'"></div>');
+	// googletag.cmd.push(function(){googletag.display(googleads.comment_bottom_highlight_ad.position);});
+
+	// 기사하단 최하단 970*250
+	$("#ad-bottom-leaderboard").html(`<div id="${googleads.bottom.position}"></div>`);
+	googletag.cmd.push(function(){googletag.display(googleads.bottom.position);});
+
+	// 기사우측단 오늘의 주요뉴스 아래 300*600
+	$("#ad-right-300-600-1").html(`<div id="${googleads.sideRectangle1.position}"></div>`);
+	googletag.cmd.push(function(){googletag.display(googleads.sideRectangle1.position);});
+
+	// 기사우측단 이시각 관심정보 01~04
+	$("#aside-ad-interest").append('<iframe src="//io1.innorame.com/imp/yje7qAPqyxdD.iframe" width="100%" height="112" allowTransparency = "true" marginwidth="0" marginheight="0" hspace="0" vspace="0" frameborder="0" scrolling="no" style="width:280px;min-width:100%;position:relative;"></iframe>');
+	// 기사우측단 이시각 관심정보 05~08
+	// $(".aside-ad-component").eq(0).append('<iframe width="100%" height="113" src="https://ad.adinc.kr/cgi-bin/PelicanC.dll?impr?pageid=08vm&out=iframe" allowTransparency = "true" marginwidth="0" marginheight="0" hspace="0" vspace="0" frameborder="0" scrolling="no"></iframe>');
+	$("#aside-ad-interest").append('<iframe src="//adv.imadrep.co.kr/9291_01.html" width="100%" height="113" border="0" frameborder="0" framemargin="0" leftmargin="0" topmargin="0" marginheight="0" marginwidth="0" scrolling="no"></iframe>');
+
+	// 콘도 바터 광고 by jun
+	// 2024.08.29 광고 일시 홀딩 by yongt
+	// $(".aside-component.aside-ad").eq(1).html('<div id="'+googleads.sideRectangle4.position+'" style="'+googleads.sideRectangle4.style+'"></div>');
+	// googletag.cmd.push(function(){googletag.display(googleads.sideRectangle4.position);});
+
+
+	// 기사우측단 추천뉴스 - 타불라
+
+	// 기사우측단 추천뉴스 아래 300*250
+	$("#ad-right-300-250-1").html(`<div id="${googleads.sideRectangle2.position}"></div>`);
+	googletag.cmd.push(function(){googletag.display(googleads.sideRectangle2.position);});
+
+
+	// 기사우측단 추천뉴스 하단 텍스트(1~8) 2025.05.02 by minwook
+	$("#aside-ad-popular").prepend('<div class="aside-tit-wrap">\
+        <strong class="aside-tit">\
+            인기정보\
+            <span class="ad-label txt-en">AD</span>\
+        </strong>\
+    </div>\
+    <!-- Begin Dable 우측_텍스트_8슬롯 / For inquiries, visit http://dable.io -->\
+        <div id="dablewidget_xlz2mzDl" data-widget_id="xlz2mzDl">\
+            <script>\
+                (function(d,a,b,l,e,r) {\
+                if(d[b]&&d[b].q)return;d[b]=function(){(d[b].q=d[b].q||[]).push(arguments)};e=a.createElement(l);\
+                e.async=1;e.charset="utf-8";e.src="//static.dable.io/dist/plugin.min.js";\
+                r=a.getElementsByTagName(l)[0];r.parentNode.insertBefore(e,r);\
+                })(window,document,"dable","script");\
+                dable("setService", "news.hankyung.com");\
+                dable("renderWidget", "dablewidget_xlz2mzDl", {ignore_items: true});\
+            </script>\
+        </div>\
+    <!-- End 우측_텍스트_8슬롯 / For inquiries, visit http://dable.io -->');
+
+	// 기사우측단 하단 300*600
+	$("#ad-right-300-600-2").html(`<div id="${googleads.sideRectangle3.position}"></div>`);
+	googletag.cmd.push(function(){googletag.display(googleads.sideRectangle3.position);});
+
+	/* 기사면 아이커버 - 인라이플
+	   기사면 우측하단 스티키 300*250 */
+	// 2023-07-17 인라이플 광고 스크립트 html단으로 이동
+	// let head = document.getElementsByTagName('head')[0];
+	// let s = document.createElement('script');
+	// s.src = '//img.mobon.net/js/common/HawkEyesMaker.js';
+	// s.onload = function(){
+	// 	$("body").append('<script>new HawkEyes({"type":"floating","platform":"W","scriptCode":"596300","frameCode":"74","width":"300","height":"250","settings":{"fType":"3","align":"right","types":"video"}});</script>');
+	// }
+	// head.appendChild(s);	
+
+	// let head = document.getElementsByTagName('head')[0];
+	// let s = document.createElement('script');
+	// s.src = '//img.mobwithad.com/ad/imgfile/mobwith.min.js';
+	// s.onload = function(){
+	// 	var zone = "10882509";
+	// 	var adType = "banner";
+	// 	var bannerType = "toast"; 
+	// 	var width = "300";
+	// 	var height = "250";
+	// 	var id = 'mobwith_' + zone;
+	// 	var pb = ""; 
+	// 	var position = "BR";  
+
+	// 	new MobWithAd({    
+	// 		'id' : id
+	// 		,'zone': zone
+	// 		, 'adType': adType
+	// 		, 'bannerType': bannerType
+	// 		, 'width': width
+	// 		, 'height': height
+	// 		, 'pb': pb
+	// 		, 'position': position
+	// 	});
+	// }
+	// head.appendChild(s);
+
+
+	// 댓글 아래(left)
+	$(".comment_bottom_ad_left").html('<div id="'+googleads.comment_bottom_ad_left.position+'"></div>');
+	googletag.cmd.push(function(){googletag.display(googleads.comment_bottom_ad_left.position);});
+
+	// 댓글 아래(right)
+	$(".comment_bottom_ad_right").html('<div id="'+googleads.comment_bottom_ad_right.position+'"></div>');
+	googletag.cmd.push(function(){googletag.display(googleads.comment_bottom_ad_right.position);});
+
+	// 하이라이트 배너 아래(2022-11-28 아래 광고들로 교체 by 김용태)
+	// $(".highlight_bottom_ad").html('<div id="'+googleads.highlight_bottom_ad.position+'" style="'+googleads.highlight_bottom_ad.style+'"></div>');
+	// googletag.cmd.push(function(){googletag.display(googleads.highlight_bottom_ad.position);});
+
+	// 하단 하이라이트 광고 추가(2022-11-28 by 김용태)
+	$(".highlight_bottom_ad_left").append('<div id="'+googleads.highlight_bottom_ad1.position+'"></div>');
+	googletag.cmd.push(function(){googletag.display(googleads.highlight_bottom_ad1.position);});
+
+	$(".highlight_bottom_ad_right").append('<div id="'+googleads.highlight_bottom_ad2.position+'"></div>');
+	googletag.cmd.push(function(){googletag.display(googleads.highlight_bottom_ad2.position);});
+
+	/** 타불라광고 **/
+	// 당신이 좋아할만한 뉴스 아래(타불라) 2슬롯
+	// 2022.11.04 임시종료
+	// _taboola.push({
+	// 	mode: 'thumbnails-desktop-a',
+	// 	container: 'taboola-desktop-below-article-1',
+	// 	placement: 'Desktop Below Article Thumbnails 1',
+	// 	target_type: 'mix'
+	// });
+
+	// 분야별 주요뉴스 위(타불라) 2슬롯
+	// 2022.11.04 임시종료
+	// _taboola.push({
+	// 	mode: 'thumbnails-desktop-a',
+	// 	container: 'taboola-desktop-below-article-2',
+	// 	placement: 'Desktop Below Article Thumbnails 2',
+	// 	target_type: 'mix'
+	// });
+
+	// _taboola.push({
+	// 	mode: 'thumbnails-stream-desktop',
+	// 	container: 'taboola-desktop-article-stream',
+	// 	placement: 'Desktop Rightrail Article Thumbnails',
+	// 	target_type: 'mix'
+	// });
+
+	// // 실행
+	// _taboola.push({flush: true});
+
+	// 티즈 스크립트
+	if($('#teads_slot').length == 1){
+		// 티즈 스크립트
+		var teads_script = "";
+		// 경제
+		if(category == 'economy') {
+			teads_script = '//a.teads.tv/page/27520/tag';
+		// 부동산/증권
+		} else if(category == 'realestate' || category == 'finance') {
+			teads_script = '//a.teads.tv/page/93063/tag';
+		// 문화
+		// 2025.01.10 life -> distribution 변경
+		} else if(category == 'distribution') {
+			teads_script = '//a.teads.tv/page/87277/tag';
+		// 연예
+		} else {
+			teads_script = '//a.teads.tv/page/84080/tag';
+		}
+
+		if(teads_script){
+			$("body").append('<script src="'+teads_script+'" async="true"></script>');
+		}
+	}
+
+	// $(".article-body-wrap").append('<scr'+'ipt src="//d1cykymlllue3h.cloudfront.net/js/hankyung_admaru_icv_01.js"></scr'+'ipt>');
+});

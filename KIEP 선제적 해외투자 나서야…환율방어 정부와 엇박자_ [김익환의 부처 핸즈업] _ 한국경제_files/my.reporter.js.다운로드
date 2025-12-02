@@ -1,0 +1,260 @@
+// 요청처리 체크변수
+var reporterInProgress = 0;
+// 클릭 카운트
+var reporterClickCount = 0;
+// 클릭 쿨타임
+var reporterCoolTime = false;
+
+// 구독자 체크 재시도 여부
+var retryReporterCheck = false;
+
+function setReporter(){
+
+    var numberArr = [];
+    $('.subs_author_list').each(function(idx,val){
+        numberArr.push($(val).data('user'));
+    });
+
+    var data = {"numbers": numberArr.join(',')}
+
+    checkReporterSubscribe(data);
+}
+
+function checkReporterSubscribe(data) {
+    $.ajax({
+        url: '/api/personal/subscribe/reporter/check/',
+        data: data,
+        type: 'POST',
+        success: function(data){
+            if(data.result == '0000') {
+                $(data.data).each(function(idx, val){
+                    if(val.isSubscribe == 'Y') {
+                        // 2025.11.12 구독 디자인 수정
+                        $('.subs_author_list[data-user="'+val.no+'"]').data('user', val.no);
+                        $('.subs_author_list[data-user="'+val.no+'"] > button')
+                        .addClass('on')
+                        .attr("aria-label", "기자 구독중, 구독 해지하기")
+                        .attr("aria-pressed", "true");
+                        $('.subs_author_list[data-user="'+val.no+'"] > button > span.blind').text("기자 구독중");
+
+                        if($('.guest-author-name-wrap[data-user="'+val.no+'"]').length > 0){
+                            $('.guest-author-name-wrap[data-user="'+val.no+'"]').data('user', val.no);
+                            $('.guest-author-name-wrap[data-user="'+val.no+'"] > button')
+                            .addClass('on')
+                            .attr("aria-label", "기자 구독중, 구독 해지하기")
+                            .attr("aria-pressed", "true");
+
+                            $('.guest-author-name-wrap[data-user="'+val.no+'"] > button > span.txt').text("구독중");
+                        }
+                    }
+                });
+
+                $(".btn-toggle-subscribe").removeClass('loading');
+            } else if(data.result == '9999') {
+                // 결과가 9999면 한 번만 재시도
+                if (!retryReporterCheck) {
+                    retryReporterCheck = true;
+                    checkReporterSubscribe(data);  // 한 번 더 요청
+                } else {
+                    $(".btn-toggle-subscribe").removeClass('loading');
+                    console.warn('재시도 실패: 이미 한 번 재시도했습니다.');
+                }
+            }
+        },
+        error: function(xhr, status, responseTxt){
+            console.log(xhr);
+        },
+        complete: function(){
+            reporterInProgress = 0;
+        }
+    });
+}
+
+
+// 2025.11.12 구독 디자인 수정
+function clickMyReporter(num, reporterName) {
+    // var reporterName = $(element).closest('.subs_author_list').data('name');
+
+    if(!loginCheck()) return false;
+
+    if(reporterInProgress == 1) {
+        alert("이전 요청을 처리중입니다.");
+        return false;
+    }
+
+    if(reporterClickCount > 10) {
+        alert("더 이상 처리할 수 없습니다.");
+
+        if(!reporterCoolTime) {
+            reporterCoolTime = true;
+            setTimeout(function () {
+              reporterClickCount = 0;
+              reporterCoolTime = false;
+            }, 1000 * 120);
+        }
+
+        return false;
+    }
+
+    var isSubscribe =  $('.subs_author_list[data-user="'+num+'"] > button').hasClass('on');
+
+    if(isSubscribe == true) {
+
+        // 기존에 열려있는 레이어를 닫는다.
+		$('.modal-btn-close').click();
+
+        $('.reporter_cancel').data('num', num);
+        // 2025.11.17 구독 해지 문구 수정
+        $('.reporter_cancel p.msg').html(`${reporterName} 구독을 취소하시겠습니까?`);
+        $('.reporter_cancel').addClass('show');
+    } else {
+        addMyReporter(num)
+    }
+}
+
+
+
+function addMyReporter(numbers) {
+
+    var data = {"numbers" : numbers};
+
+    reporterInProgress = 1;
+    reporterClickCount++;
+
+    $.ajax({
+        url: '/api/personal/subscribe/reporter/insert/'
+        , data: data
+        , type: 'POST'
+        , success: function(data){
+            if(data.result == '0000') {
+                // 2025.11.12 구독 디자인 수정
+                $('.subs_author_list[data-user="'+numbers+'"]').data('no', data.data);
+                $('.subs_author_list[data-user="'+numbers+'"] > button')
+                .addClass('on')
+                .attr("aria-label", "기자 구독중, 구독 해지하기")
+                .attr("aria-pressed", "true");
+                $('.subs_author_list[data-user="'+numbers+'"] > button > span.blind').text("구독중");
+
+                if($('.guest-author-name-wrap[data-user="'+numbers+'"]').length > 0){
+                    $('.guest-author-name-wrap[data-user="'+numbers+'"]').data('user', numbers);
+                    $('.guest-author-name-wrap[data-user="'+numbers+'"] > button')
+                    .addClass('on')
+                    .attr("aria-label", "기자 구독중, 구독 해지하기")
+                    .attr("aria-pressed", "true");
+
+                    $('.guest-author-name-wrap[data-user="'+numbers+'"] > button > span.txt').text("구독중");
+                }
+
+                // $('.btn-journalist-subscribe').addClass('on');
+
+                // var count = parseInt($('.journalist-subscription .count').text());
+                // $('.journalist-subscription .count').text(count+1);
+
+                alertToolbar('success_reporter');
+            } else {
+                alert(data.text);
+            }
+        }
+        , error: function(xhr, status, responseTxt){
+            console.log(xhr);
+        }
+        , complete: function(){
+            reporterInProgress = 0;
+        }
+    });
+}
+
+function deleteMyReporter(element) {
+
+    var num = $(element).closest('.reporter_cancel').data('num');
+
+    var data = {"num" : num};
+
+    reporterInProgress = 1;
+    reporterClickCount++;
+
+    $.ajax({
+        url: '/api/personal/subscribe/reporter/delete'
+        , data: data
+        , type: 'POST'
+        , success: function(data){
+
+            $('.reporter_cancel').removeClass('show');
+
+            if(data.result == '0000') {
+                // 2025.11.12 구독 디자인 수정
+                $('.subs_author_list[data-user="'+num+'"] > button')
+                .removeClass('on')
+                .attr("aria-label", "기자 구독하기")
+                .attr("aria-pressed", "false");
+                $('.subs_author_list[data-user="'+num+'"] > button > span.blind').text("기자 구독하기");
+
+                if($('.guest-author-name-wrap[data-user="'+num+'"]').length > 0){
+                    $('.guest-author-name-wrap[data-user="'+num+'"] > button')
+                    .removeClass('on')
+                    .attr("aria-label", "기자 구독하기")
+                    .attr("aria-pressed", "false");
+
+                    $('.guest-author-name-wrap[data-user="'+num+'"] > button > span.txt').text("구독하기");
+                }
+                // $('.btn-journalist-subscribe').removeClass('on');
+
+                // var count = parseInt($('.journalist-subscription .count').text());
+                // $('.journalist-subscription .count').text(count-1);
+
+                alertToolbar('deleted_reporter');
+            }
+        }
+        , error: function(xhr, status, responseTxt){
+            console.log(xhr);
+        }
+        , complete: function(){
+            reporterInProgress = 0;
+        }
+    });
+}
+
+function reporterInfo(email) {
+
+    if(reporterInProgress == 1) {
+        alert("이전 요청을 처리중입니다.");
+        return false;
+    }
+
+    var data = {"reporter" : email};
+
+    reporterInProgress = 1;
+
+    $.ajax({
+        url: '/reporterinfo/'
+        , data: data
+        , type: 'POST'
+        , success: function(data){
+
+            $('body').append(data);
+
+            // 구독 여부 활성화
+            if($('.subs_author_list[data-email="'+email+'"] > button').hasClass('on')) {
+                $('.btn-journalist-subscribe').addClass('on');
+            } else {
+                $('.btn-journalist-subscribe').removeClass('on');
+            }
+        }
+        , error: function(xhr, status, responseTxt){
+            console.log(xhr);
+        }
+        , complete: function(){
+            reporterInProgress = 0;
+        }
+    });
+}
+
+$(function(){
+    if($.cookie('SSOid')){
+        setReporter();
+    }
+    // 2025.11.12 로딩 수정
+    else{
+        $(".btn-toggle-subscribe").removeClass('loading');
+    }
+});

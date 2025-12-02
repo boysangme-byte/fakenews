@@ -1,0 +1,138 @@
+// 요청처리 체크변수
+var scrapInProgress = 0;
+// 클릭 카운트
+var scrapClickCount = 0;
+// 클릭 쿨타임
+var scrapCoolTime = false;
+
+// 스크랩된 기사인지 체크
+function checkScrapArticle(aid) {
+
+    var data = {"aid" : aid};
+
+    scrapInProgress = 1;
+
+    $.ajax({
+        url: '/api/personal/scrap/news/check'
+        , data: data
+        , type: 'POST'
+        , success: function(data){
+            if(data.result == '0000') {
+                $('.login-tool-scrap').data('no', data.data);
+                $('.login-tool-scrap').addClass('on');
+            }
+        }
+        , error: function(xhr, status, responseTxt){
+            console.log(xhr);
+        }
+        , complete: function(){
+            scrapInProgress = 0;
+        }
+    });
+}
+
+// 스크랩 버튼 클릭
+function clickScrap(aid) {
+
+    if(!loginCheck()) return false;
+
+    if(scrapInProgress == 1) {
+        alert("이전 요청을 처리중입니다.");
+        return false;
+    }
+
+    if(scrapClickCount > 10) {
+        alert("더 이상 처리할 수 없습니다.");
+   
+        if(!scrapCoolTime) {
+            scrapCoolTime = true;
+            setTimeout(function () {
+              scrapClickCount = 0;
+              scrapCoolTime = false;
+            }, 1000 * 120);
+        }
+
+        return false;
+    }
+
+    var isScrap = $('.login-tool-scrap').hasClass('on');
+    var scrapNo = $('.login-tool-scrap').data('no');
+
+    if(isScrap == true) {
+        $('.scrap_cancel').data('no', scrapNo);
+        $('.scrap_cancel').addClass('show');
+    } else {
+        addMyScrapArticle(aid)
+    }
+}
+
+// 나의 스크랩에 해당 기사를 추가한다.
+function addMyScrapArticle(aid) {
+
+    var data = {"aid" : aid};
+
+    scrapInProgress = 1;
+    scrapClickCount++;
+
+    $.ajax({
+        url: '/api/personal/scrap/news/insert'
+        , data: data
+        , type: 'POST'
+        , success: function(data){
+            if(data.result == '0000') {
+                $('.login-tool-scrap').addClass('on');
+                $('.login-tool-scrap').data('no', data.data);
+
+                alertToolbar('success_scrap');
+            } else {
+                alert(data.text);
+            }
+        }
+        , error: function(xhr, status, responseTxt){
+            console.log(xhr);
+        }
+        , complete: function(){
+            scrapInProgress = 0;
+        }
+    });
+}
+
+// 나의 스크랩에 해당 기사를 삭제한다.
+function deleteMyScrapArticle(element) {
+
+    var no = $(element).closest('.scrap_cancel').data('no');
+    var data = {"no" : no};
+
+    scrapInProgress = 1;
+    scrapClickCount++;
+
+    $.ajax({
+        url: '/api/personal/scrap/news/delete'
+        , data: data
+        , type: 'POST'
+        , success: function(data){
+            $('.scrap_cancel').removeClass('show');
+
+            if(data.result == '0000') {
+                $('.login-tool-scrap').removeClass('on');
+
+                alertToolbar('deleted_scrap');
+            } else {
+                alert("오류가 발생하였습니다.("+data.result+")");
+            }
+        }
+        , error: function(xhr, status, responseTxt){
+            console.log(xhr);
+        }
+        , complete: function(){
+            scrapInProgress = 0;
+        }
+    });
+}
+
+
+$(function(){
+    if($.cookie('SSOid')){
+        checkScrapArticle(aid);
+    }
+})

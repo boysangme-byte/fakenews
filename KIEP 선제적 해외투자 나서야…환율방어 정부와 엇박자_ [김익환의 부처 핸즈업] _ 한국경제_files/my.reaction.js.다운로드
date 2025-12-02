@@ -1,0 +1,141 @@
+// 요청처리 체크변수
+var reactionInProgress = 0;
+// 클릭 카운트
+var reactionClickCount = 0;
+// 클릭 쿨타임
+var reactionCoolTime = false;
+
+// 기사별 리액션 카운트 가져오기
+function getReactionCount(aid) {
+
+    var data = {"aid" : aid};
+
+    reactionInProgress = 1;
+
+    $.ajax({
+        url: '/api/open/article/reaction/count'
+        , data: data
+        , type: 'GET'
+        , success: function(data){
+            if(data.result == '0000') {
+                $('.btn-like > strong.emotion-count').text(data.data.good);
+                $('.btn-hate > strong.emotion-count').text(data.data.bad);
+                $('.btn-want > strong.emotion-count').text(data.data.want);
+            } else {
+                //alert("오류가 발생하였습니다. 다시 시도해주세요.("+data.code+")");
+                console.log(data.text);
+            }
+        }
+        , error: function(xhr, status, responseTxt){
+            console.log(xhr);
+        }
+        , complete: function(){
+            reactionInProgress = 0;
+        }
+    });
+}
+
+// 회원별 특정기사 리액션 카운트 가져오기
+function getReactionCheckByUser(aid) {
+
+    var data = {"aid" : aid};
+
+    reactionInProgress = 1;
+
+    $.ajax({
+        url: '/api/personal/reaction/check'
+        , data: data
+        , type: 'POST'
+        , success: function(data){
+            if(data.result == '0000') {
+                $('.empathy-wrap > button[data-reaction="'+data.data.check+'"]').addClass('on');
+            } else {
+                console.log(data);
+            }
+        }
+        , error: function(xhr, status, responseTxt){
+            console.log(xhr);
+        }
+        , complete: function(){
+            reactionInProgress = 0;
+        }
+    });
+}
+
+// 리액션 클릭
+function clickReaction(aid, kind, element) {
+
+    if(!loginCheck()) return false;
+
+    if(reactionInProgress == 1) {
+        alert("이전 요청을 처리중입니다.");
+        return false;
+    }
+
+    if(reactionClickCount > 10) {
+        alert("더 이상 처리할 수 없습니다.");
+   
+        if(!reactionCoolTime) {
+            reactionCoolTime = true;
+            setTimeout(function () {
+              reactionClickCount = 0;
+              reactionCoolTime = false;
+            }, 1000 * 120);
+        }
+
+        return false;
+    }
+
+
+    var isActive = $(element).hasClass('on');
+    var data = {"aid" : aid, "kind" : kind};
+
+    if(isActive) data['isActive'] = true;
+
+    reactionInProgress = 1;
+    reactionClickCount++;
+
+    $.ajax({
+        url: '/api/personal/reaction/action'
+        , data: data
+        , type: 'POST'
+        , success: function(data){
+
+            if(data.result == '0000') {
+                // 활성화 및 카운트 업데이트
+                $.each(data.data.count, function(key, val) {
+                    $('.empathy-wrap > button[data-reaction="'+key+'"] > strong.emotion-count').text(val);
+                });
+
+                $('.empathy-wrap > button').removeClass('on');
+
+                if(data.data.check != '') {
+                    $('.empathy-wrap > button[data-reaction="'+data.data.check+'"]').addClass('on');
+                }
+
+            } else if(data.result == '0005'){
+                alert(data.text);
+            } else if(data.result == '9999') {
+                $('.modal-btn-close').click();
+                $('.hk-modal.common_alert').addClass('show');
+            }
+        }
+        , error: function(xhr, status, responseTxt){
+            console.log(xhr);
+        }
+        , complete: function(){
+            reactionInProgress = 0;
+        }
+    });
+}
+
+
+
+$(function(){
+    // 초기 세팅
+    getReactionCount(aid);
+
+    if(typeof $.cookie('SSOid') != 'undefined' && $.cookie('SSOid') != '') {
+        getReactionCheckByUser(aid);
+    }
+})

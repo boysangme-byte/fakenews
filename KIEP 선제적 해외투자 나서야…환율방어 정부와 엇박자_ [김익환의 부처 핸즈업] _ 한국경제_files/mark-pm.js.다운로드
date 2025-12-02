@@ -1,0 +1,93 @@
+if (typeof jQuery != 'undefined') {
+    $(function(){
+        markPayment();
+    });
+    
+    function markPayment(){
+        // 로그인 기사 리스트
+        $('.paymentA:not(:has(.icon--member))').each(function(index,element){
+            if($(element).closest('.main-headline').length > 0){
+                if($(element).closest('.main-headline').find('.thumb').eq(0).find('a').attr('href') == $(element).attr('href')){
+                    $(element).closest('.main-headline').find('.thumb').eq(0).append('<img src="https://hkstatic.hankyung.com/resource/www/common/img/icon/icon-memberonly.svg?v=20240904_1" alt="회원" class="icon--member">');
+                    return true;
+                }
+            }
+            $(element).prepend(`<img src="https://hkstatic.hankyung.com/resource/www/common/img/icon/icon-memberonly.svg?v=20240904_1" alt="회원" class="icon--member">`);
+        });
+
+        // 로그인 기사 리스트(data-pm='A')
+        $('[data-pm=A]:not(:has(.icon--member))').prepend(`<img src="https://hkstatic.hankyung.com/resource/www/common/img/icon/icon-memberonly.svg?v=20240904_1" alt="회원" class="icon--member">`);
+
+        // 유료 기사 리스트
+        $('.paymentY:not(:has(.icon--premium))').each(function(index,element){
+            if($(element).closest('.main-headline').length > 0){
+                if($(element).closest('.main-headline').find('.thumb').eq(0).find('a').attr('href') == $(element).attr('href')){
+                    $(element).closest('.main-headline').find('.thumb').eq(0).append('<img src="https://hkstatic.hankyung.com/resource/www/common/img/icon/icon-premium.svg" alt="프리미엄" class="icon--premium">');
+                    return true;
+                }
+            }
+            $(element).prepend(`<img src="https://hkstatic.hankyung.com/resource/www/common/img/icon/icon-premium.svg" alt="프리미엄" class="icon--premium">`);
+        });
+
+        $('[data-pm=Y]:not(:has(.icon--premium))').prepend(`<img src="https://hkstatic.hankyung.com/resource/www/common/img/icon/icon-premium.svg" alt="프리미엄" class="icon--premium">`);
+    }
+
+    /*
+    function markPayment(){
+        $('.paymentA:not(:has(.icon-membersonly))').each(function(index,element){
+            if($(element).closest('.main-headline').length > 0){
+                if($(element).closest('.main-headline').find('.thumb').eq(0).find('a').attr('href') == $(element).attr('href')){
+                    $(element).closest('.main-headline').find('.thumb').eq(0).append('<span class="icon-membersonly">회원전용</span>');
+                    return true;
+                }
+            }
+            $(element).prepend('<span class="icon-membersonly">회원전용</span>');
+        });
+
+        $('[data-pm=A]:not(:has(.icon-membersonly))').prepend('<span class="icon-membersonly">회원전용</span>');
+
+        $('.paymentY:not(:has(.icon-premium-txt))').each(function(index,element){
+            if($(element).closest('.main-headline').length > 0){
+                if($(element).closest('.main-headline').find('.thumb').eq(0).find('a').attr('href') == $(element).attr('href')){
+                    $(element).closest('.main-headline').find('.thumb').eq(0).append('<span class="icon-premium-txt">P</span>');
+                    return true;
+                }
+            }
+            $(element).prepend('<span class="icon-premium-txt">P</span>');
+        });
+
+        $('[data-pm=Y]:not(:has(.icon-premium-txt))').prepend('<span class="icon-premium-txt">P</span>');
+    }
+    */
+    
+    function markPaymentTest(){
+        $('.paymentA:not(:has(.icon-membersonly))').each(function(index,element){
+            if($(element).closest('.main-headline').length > 0){
+                if($(element).closest('.main-headline').find('.thumb').eq(0).find('a').attr('href') == $(element).attr('href')){
+                    $(element).closest('.main-headline').find('.thumb').eq(0).append('<span class="icon-membersonly">회원전용</span>');
+                    return true;
+                }
+            }
+            $(element).prepend('<span class="icon-membersonly">회원전용</span>');
+        });
+
+        $('[data-pm=A]:not(:has(.icon-membersonly))').prepend('<span class="icon-membersonly">회원전용</span>');
+
+        $('.paymentY:not(:has(.icon-premium-txt))').each(function(index,element){
+            if($(element).closest('.main-headline').length > 0){
+                if($(element).closest('.main-headline').find('.thumb').eq(0).find('a').attr('href') == $(element).attr('href')){
+                    $(element).closest('.main-headline').find('.thumb').eq(0).append('<span class="icon-premium-txt">P</span>');
+                    return true;
+                }
+            }
+            $(element).prepend('<span class="icon-premium-txt">P</span>');
+        });
+
+        $('[data-pm=Y]:not(:has(.icon-premium-txt))').prepend('<span class="icon-premium-txt">P</span>');
+    }
+
+    function removeMarkPayment(){
+        $('.icon-membersonly, .icon-premium-txt').remove();
+
+    }
+}
